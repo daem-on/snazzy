@@ -1,0 +1,145 @@
+#game {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+	height: 100%;
+}
+
+#ui {
+	display: flex;
+	flex-direction: row;
+}
+
+#ui > div {
+	background: white;
+	padding: 12px;
+	margin: 10px;
+}
+
+#ui a {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+i.material-icons {
+	font-size: medium;
+    position: relative;
+	top: 2px;
+}
+
+.cardrow {
+	display: flex;
+	flex-direction: row;
+	/* Bad for accessibility, good for looks */
+	outline: none;
+}
+
+#hand {
+	position: relative;
+}
+
+#hand.czar .dropzone {
+	opacity: 50%;
+}
+
+#hand.czar .warning {
+	display: initial;
+}
+
+.warning {
+	position: absolute;
+	width: calc(100% - 50px);
+	display: none;
+	text-align: center;
+	background: white;
+	padding: 25px;
+	border-radius: 12px;
+	font-size: larger;
+	z-index: 2;
+	top: 3em;
+}
+
+#remove.czar p {
+	background: repeating-linear-gradient(
+		45deg, #00000000, #00000000 10px,
+		#ffffff81 10px, #ffffff81 20px
+	);
+}
+
+.card {
+	width: 120px;
+	height: 160px;
+	background-color: white;
+	border-radius: 10px;
+	margin: 8px;
+	padding: 12px;
+}
+
+.white.card {
+	width: 160px;
+}
+
+.card.winner {
+	border: rgb(0, 140, 255) 3px solid;
+	transition: transform 0.2s;
+	box-shadow: 0px 12px 29px -16px rgba(0,0,0,0.75);
+	transform: scale(1.2);
+	z-index: 3;
+}
+
+a.card {
+	background: none;
+	text-align: center;
+	color: white;
+}
+
+a.card p {
+	font-weight: bold;
+	border: white 3px solid;
+	border-radius: 10px;
+	padding: 30px 0;
+}
+
+/* a.card {
+	color: white;
+	box-shadow: 0px 0px 29px -5px rgb(46, 17, 0) inset;
+	background: none;
+	text-align: center;
+} */
+
+.dropzone {
+	width: 160px;
+	height: 200px;
+}
+
+.dropzone:empty {
+	outline: rgba(255, 255, 255, 0.445) 3px dashed;
+	outline-offset: -12px;
+}
+
+.black {
+	background-color: black;
+	color: white;
+}
+
+html {
+	background-color: #e6a07a;
+	background-image: url("assets/wood-pattern.png");
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	font-family: Lato, Helvetica, sans-serif;
+	overflow-y: hidden;
+}
+
+.draggable-source--is-dragging .card {
+	color: rgba(0,0,0,0);
+	background: none;
+	outline: white 3px dashed;
+}
+
+.draggable-mirror .card {
+	transition: transform 0.2s;
+	box-shadow: 0px 12px 29px -16px rgba(0,0,0,0.75);
+	transform: scale(1.2);
+}
