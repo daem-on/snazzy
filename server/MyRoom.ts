@@ -115,10 +115,7 @@ export class MyRoom extends Room<State> {
 		this.state.playerList.push(client.id);
 
 		if (this.state.roundNumber > 0) {
-			// we need to give them time to
-			// download the reference files :/
-			this.clock.setTimeout(
-				() => this.dealCardsOnce(client), 1000)
+			this.dealCardsOnce(client);
 		}
 	}
 
@@ -144,7 +141,8 @@ export class MyRoom extends Room<State> {
 		for (let i = 0; i < this.constants.dealNumber; i++) {
 			hand.push(this.deck.playing.responses.pop());
 		}
-		this.send(client, {type: "deal", hand: hand})
+		this.send(client, {type: "dealPatch", hand: hand})
+		this.state.playerStatus[client.id] = "playing";
 	}
 
 	giveCard (client: Client) {
@@ -164,11 +162,6 @@ export class MyRoom extends Room<State> {
 		this.state.roundNumber++;
 		this.giveCardPending = [];
 		this.broadcast({type: "newRound"});
-
-		this.clients.forEach(client => {
-			if (!this.state.playerPoints[client.id])
-				this.state.playerPoints[client.id] = 0;
-		})
 
 		this.czar++;
 		if (this.czar > this.clients.length-1) this.czar = 0;
@@ -224,7 +217,10 @@ export class MyRoom extends Room<State> {
 				return;
 			}
 			let picked = this.state.responses[message.cardIndex];
+			if (!this.state.playerPoints[picked.playedBy])
+				this.state.playerPoints[picked.playedBy] = 0;
 			this.state.playerPoints[picked.playedBy] += 1;
+
 			this.broadcast({ type: "winner", cardIndex: message.cardIndex });
 			this.state.playerStatus[client.id] = "played";
 

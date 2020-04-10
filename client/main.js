@@ -12,17 +12,17 @@ const cardItem = `<div class="item">
 const cardElement = `<div class="white card"></div>`
 const dropzoneItem = `<div class="dropzone"></div>`
 
-$(document).ready(() => {
-	if (window.location.hash) {
-		var arr = window.location.hash.slice(1).split("&")
-		if (arr.length > 1) {
-			connect({title: arr[0], deck: arr[1]});
-			loadReferences(arr[1]);
-		} else {
-			connect({title: arr[0]});
-		}
+if (window.location.hash) {
+	var arr = window.location.hash.slice(1).split("&")
+	if (arr.length > 1) {
+		connect({title: arr[0], deck: arr[1]});
+		loadReferences(arr[1]);
+	} else {
+		connect({title: arr[0]});
 	}
-});
+} else {
+	window.location.replace("/about.html");
+}
 
 async function connect(settings) {
 	try {
@@ -32,7 +32,6 @@ async function connect(settings) {
 	
 		const name = prompt("Choose a username.", "Username");
 
-		getReferencesFromServer();
 		room.send({type: "name", text: name});
 		room.onMessage(onMessage);
 		room.onStateChange(onStateChange);
@@ -62,7 +61,8 @@ function pick(index) {
 }
 
 function remove() {
-	if (iAmCzar) return;
+	if (iAmCzar ||
+		room.state.playerStatus[room.sessionId] != "playing") return;
 	var played = [];
 	$("#submit .dropzone .item").toArray().forEach(card => {
 		$(card).parent().removeClass("draggable-dropzone--occupied");
@@ -151,6 +151,8 @@ function onMessage(msg) {
 		});
 	} else if (msg.type == "update") {
 		updateGame();
+	} else if (msg.type == "dealPatch") {
+		dealPatch(msg.hand)
 	} else if (msg.type == "giveCard") {
 		addToHand(msg.hand, reference.responses[msg.hand]);
 	} else if (msg.type == "czar") {
@@ -169,6 +171,18 @@ function onMessage(msg) {
 		alert("Game over. Winner is " 
 		+ room.state.playerNames[msg.winner])
 	}
+}
+
+// we're joining late, patch deal cards
+async function dealPatch(hand) {
+	let deck = room.state.deck;
+	await loadReferences(deck);
+
+	hand.forEach(card => {
+		addToHand(card, reference.responses[card]);
+	});
+
+	updateGame();
 }
 
 function startGame() {
@@ -215,6 +229,7 @@ async function loadReferences(id) {
 		url: "data/" + id + "/responses-clean.json" });
 	reference.calls = calls;
 	reference.responses = responses;
+	return true;
 }
 
 function getReferencesFromServer() {
