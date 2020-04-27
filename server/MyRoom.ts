@@ -37,7 +37,7 @@ class Deck {
 	}
 	
 	// Fisher-Yates, copied from StackOverflow
-	shuffle(a: any[]) {
+	static shuffle(a: any[]) {
 		var j, x, i;
 		for (i = a.length - 1; i > 0; i--) {
 			j = Math.floor(Math.random() * (i + 1));
@@ -50,12 +50,12 @@ class Deck {
 	
 	reshuffleCalls() {
 		var c = this.calls.slice(0, this.calls.length);
-		this.playing.calls = this.shuffle(c);
+		this.playing.calls = Deck.shuffle(c);
 	}
 	
 	reshuffleResponses() {
 		var r = this.responses.slice(0, this.responses.length);
-		this.playing.responses = this.shuffle(r);
+		this.playing.responses = Deck.shuffle(r);
 	}
 }
 
@@ -78,8 +78,8 @@ export class MyRoom extends Room<State> {
 	cardsInRound: Record<string, number>;
 	giveCardPending: Client[];
 	constants = {
-		callsNumber: 100,
-		responsesNumber: 200,
+		callsNumber: 141,
+		responsesNumber: 330,
 		dealNumber: 7,
 		winLimit: 5
 	}
@@ -100,8 +100,9 @@ export class MyRoom extends Room<State> {
 				this.constants.responsesNumber = d.responses;
 			}
 			this.state.deck = options.deck;
+		} else {
+			this.state.deck = "12b";
 		}
-		console.log(this.constants);
 
 		this.deck = new Deck("DHG4B",
 			this.constants.callsNumber,
@@ -163,15 +164,19 @@ export class MyRoom extends Room<State> {
 		this.giveCardPending = [];
 		this.broadcast({type: "newRound"});
 
-		this.czar++;
-		if (this.czar > this.clients.length-1) this.czar = 0;
-		this.send(this.clients[this.czar], {type: "czar"});
-		this.state.playerStatus[this.clients[this.czar].id] = "czar";
+		this.chooseNewCzar();
 
 		if (this.deck.playing.calls.length < 3) this.deck.reshuffleCalls();
 		this.state.call = new Card();
 		this.state.call.cardid[0] = this.deck.playing.calls.pop();
 		this.broadcast({type: "update"}, {afterNextPatch: true});
+	}
+
+	chooseNewCzar() {
+		this.czar++;
+		if (this.czar > this.clients.length-1) this.czar = 0;
+		this.send(this.clients[this.czar], {type: "czar"});
+		this.state.playerStatus[this.clients[this.czar].id] = "czar";
 	}
 
 	onMessage (client: Client, message: any) {
@@ -224,8 +229,10 @@ export class MyRoom extends Room<State> {
 			this.broadcast({ type: "winner", cardIndex: message.cardIndex });
 			this.state.playerStatus[client.id] = "played";
 
-			if (this.state.playerPoints[picked.playedBy] > this.constants.winLimit)
-				return this.broadcast({ type: "over", winner: picked.playedBy });
+			if (this.state.playerPoints[picked.playedBy] > this.constants.winLimit) {
+				this.broadcast({ type: "over", winner: picked.playedBy });
+				return this.disconnect();
+			}
 
 			this.givePendingCards();
 			this.endRound();
@@ -237,6 +244,14 @@ export class MyRoom extends Room<State> {
 			}
 		} else if (message.type == "name") {
 			this.state.playerNames[client.id] = message.text;
+		} else if (message.type == "debug") {
+			if (message.cmd == "newRound") {
+				this.givePendingCards();
+				this.startRound();
+			} else if (message.cmd == "stop") {
+				this.broadcast({type: "restart"});
+				this.disconnect();
+			}
 		}
 	}
 
@@ -247,13 +262,15 @@ export class MyRoom extends Room<State> {
 		});
 		if (flag) return; // we're not done
 
+		Deck.shuffle(this.state.responses);
+
 		this.state.reveal = true;
 		this.broadcast({type: "reveal"}, {afterNextPatch: true});
 	}
 
 	givePendingCards() {
 		this.giveCardPending.forEach(client => {
-			if (client.readyState == 3) return;
+			if (!client) return;
 			for (var i = 0; i < this.cardsInRound[client.id]; i++) {
 				this.giveCard(client);
 			}
@@ -267,7 +284,9 @@ export class MyRoom extends Room<State> {
 
 	onLeave (client: Client, consented: boolean) {
 		console.log("Left", client.id, consented)
+		if (this.state.playerStatus[client.id] == "czar") this.chooseNewCzar();
 		this.state.playerList.splice(this.state.playerList.indexOf(client.id), 1)
+		this.revealIfDone();
 	}
 
 	onDispose() {

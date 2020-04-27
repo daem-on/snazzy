@@ -2,5 +2,9 @@
 	"12b": {
 		"calls": 141,
 		"responses": 330
+	},
+	"us": {
+		"calls": 100,
+		"responses": 500
 	}
 }

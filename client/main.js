@@ -168,10 +168,20 @@ function onMessage(msg) {
 		$(`.white.card[index=${msg.cardIndex}]`)
 			.addClass("winner");
 	} else if (msg.type == "over") {
-		alert("Game over. Winner is " 
-		+ room.state.playerNames[msg.winner])
+		alert("Game over. The winner is " 
+		+ room.state.playerNames[msg.winner] + ".")
+	} else if (msg.type == "restart") {
+		location.reload();
 	}
 }
+
+// debug menu
+document.onkeyup = function(e) {
+	if (e.ctrlKey && e.altKey && e.which == 68) {
+		var cmd = prompt("Msg to send:");
+		room.send({type: "debug", cmd: cmd});
+	}
+};
 
 // we're joining late, patch deal cards
 async function dealPatch(hand) {
