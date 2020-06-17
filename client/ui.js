@@ -6,6 +6,7 @@ var ui = new Vue({
 			roundNumber: 0,
 			playerList: [],
 		},
+		self: null,
 		icon: {
 			"playing": "sms",
 			"played": "check",

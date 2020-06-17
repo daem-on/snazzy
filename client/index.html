@@ -22,7 +22,7 @@
 				{{ state.playerPoints[player] }}</span>
 			</div>
 		</div>
-		<div v-if="state.roundNumber == 0">
+		<div v-if="state.roundNumber == 0 && state.host == self">
 			<a onclick="startGame()">Start</a>
 		</div>
 	</div>

@@ -2,6 +2,8 @@ import { Room, Client } from "colyseus";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
 import fs from "fs";
 
+const DEFAULT_DECK = "12b";
+
 class ChatMessage extends Schema {
 	@type("string") message: string;
 	@type("string") id: string;
@@ -69,6 +71,7 @@ export class State extends Schema {
 	@type({map: "number"}) playerPoints = new MapSchema<number>();
 	@type("number") roundNumber: number;
 	@type("string") deck: string;
+	@type("string") host: string;
 }
 
 export class MyRoom extends Room<State> {
@@ -77,6 +80,7 @@ export class MyRoom extends Room<State> {
 	// workaround for not knowing how many cards are played
 	cardsInRound: Record<string, number>;
 	giveCardPending: Client[];
+	host: Client;
 	constants = {
 		callsNumber: 141,
 		responsesNumber: 330,
@@ -101,9 +105,10 @@ export class MyRoom extends Room<State> {
 			}
 			this.state.deck = options.deck;
 		} else {
-			this.state.deck = "12b";
+			this.state.deck = DEFAULT_DECK;
 		}
 
+		this.host = null;
 		this.deck = new Deck("DHG4B",
 			this.constants.callsNumber,
 			this.constants.responsesNumber);
@@ -114,6 +119,8 @@ export class MyRoom extends Room<State> {
 	onJoin (client: Client, options: any) {
 		console.log("Joined", client.id, options)
 		this.state.playerList.push(client.id);
+		if (!this.host) this.host = client;
+		this.state.host = this.host.id;
 
 		if (this.state.roundNumber > 0) {
 			this.dealCardsOnce(client);
@@ -237,6 +244,8 @@ export class MyRoom extends Room<State> {
 			this.givePendingCards();
 			this.endRound();
 		} else if (message.type == "startGame") {
+			if (client != this.host)
+				return this.send(client, {type: "error", message: "You're not the Host."});
 			if (this.state.roundNumber == 0) { // if it wasn't started already
 				this.czar = -1;
 				this.dealCards();
@@ -285,6 +294,9 @@ export class MyRoom extends Room<State> {
 	onLeave (client: Client, consented: boolean) {
 		console.log("Left", client.id, consented)
 		if (this.state.playerStatus[client.id] == "czar") this.chooseNewCzar();
+		if (this.host == client) this.host = this.clients.filter(item => item!=client)[0];
+		console.log("new host", this.host)
+		this.state.host = this.host.id;
 		this.state.playerList.splice(this.state.playerList.indexOf(client.id), 1)
 		this.revealIfDone();
 	}

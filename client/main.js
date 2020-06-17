@@ -29,6 +29,7 @@ async function connect(settings) {
 		room = await client.joinOrCreate("my_room", settings)
 		console.log("Joined", room.name, "as", room.sessionId);
 		ui.ready = true;
+		ui.self = room.sessionId;
 	
 		const name = prompt("Choose a username.", "Username");
 
