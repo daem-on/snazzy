@@ -146,32 +146,32 @@ draggable.on("drag:start", event => {
 function onMessage(msg) {
 	console.log("MSG:", msg);
 
-	if (msg.type == "deal") {
+	if (msg.t == 0) { // Deal
 		msg.hand.forEach(card => {
 			addToHand(card, reference.responses[card]);
 		});
-	} else if (msg.type == "update") {
+	} else if (msg.t == 1) { // Update
 		updateGame();
-	} else if (msg.type == "dealPatch") {
+	} else if (msg.t == 2) { // DealPatch
 		dealPatch(msg.hand)
-	} else if (msg.type == "giveCard") {
+	} else if (msg.t == 3) { // GiveCard
 		addToHand(msg.hand, reference.responses[msg.hand]);
-	} else if (msg.type == "czar") {
+	} else if (msg.t == 4) { // Czar
 		iAmCzar = true;
 		$("#hand, #remove").addClass("czar");
-	} else if (msg.type == "newRound") {
+	} else if (msg.t == 5) { // NewRound
 		iAmCzar = false;
 		dropzonesCreated = false;
 		$("#hand, #remove").removeClass("czar");
-	} else if (msg.type == "reveal") {
+	} else if (msg.t == 6) { // Reveal
 		revealCards();
-	} else if (msg.type == "winner") {
+	} else if (msg.t == 7) { // Winner
 		$(`.white.card[index=${msg.cardIndex}]`)
 			.addClass("winner");
-	} else if (msg.type == "over") {
+	} else if (msg.t == 8) { // Over
 		alert("Game over. The winner is " 
 		+ room.state.playerNames[msg.winner] + ".")
-	} else if (msg.type == "restart") {
+	} else if (msg.t == 9) { // Restart
 		location.reload();
 	}
 }
