@@ -301,11 +301,13 @@ export class MyRoom extends Room<State> {
 	}
 
 	onLeave (client: Client, consented: boolean) {
-		console.log("Left", client.id, consented)
-		if (this.state.playerStatus[client.id] == "czar") this.chooseNewCzar();
-		if (this.host == client) this.host = this.clients.filter(item => item!=client)[0];
+		const id = client.id
+		console.log("Left", id, consented)
+		if (this.state.playerStatus[id] == "czar") this.chooseNewCzar();
+		if (id == this.host.id) this.host = this.clients[0];
+		else console.log("There is a host,", this.host.id)
 		this.state.host = this.host.id;
-		this.state.playerList.splice(this.state.playerList.indexOf(client.id), 1)
+		this.state.playerList.splice(this.state.playerList.indexOf(id), 1)
 		this.revealIfDone();
 	}
 
