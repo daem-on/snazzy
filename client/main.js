@@ -1,4 +1,5 @@
-var client = new Colyseus.Client('ws://localhost:2567');
+var url = window.location.host
+var client = new Colyseus.Client('ws://'+url);
 var room;
 var reference = {calls: [], responses: []};
 var iAmCzar = false;

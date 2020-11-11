@@ -1,0 +1,5 @@
+{
+	"uid": "snazzy",
+	"script": "index.ts",
+	"command": "ts-node"
+}
