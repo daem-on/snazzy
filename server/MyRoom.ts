@@ -1,8 +1,5 @@
 import { Room, Client } from "colyseus";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
-import fs from "fs";
-
-const DEFAULT_DECK = "12b";
 
 enum Msg {
 	Deal,
