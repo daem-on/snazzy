@@ -1,0 +1,15 @@
+{
+	"dealNumber": 7,
+	"winLimit": 5,
+	"defaultDeck": "us",
+	"decks": {
+		"12b": {
+			"calls": 141,
+			"responses": 330
+		},
+		"us": {
+			"calls": 99,
+			"responses": 500
+		}
+	}
+}

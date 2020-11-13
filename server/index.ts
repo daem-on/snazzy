@@ -4,6 +4,7 @@ import cors from "cors";
 import { Server } from "colyseus";
 import { monitor } from "@colyseus/monitor";
 import path from "path";
+import fs from "fs";
 // import socialRoutes from "@colyseus/social/express"
 
 import { MyRoom } from "./MyRoom";
@@ -15,15 +16,19 @@ app.use(cors());
 app.use(express.json())
 const clientPath = __dirname.includes("build") ? "../../client" : "../client";
 app.use(express.static(path.join(__dirname, clientPath)))
+app.use("/data", express.static("data"))
+
+let text = fs.readFileSync("config/settings.json", "utf-8")
+const globalSettings = JSON.parse(text);
 
 const server = http.createServer(app);
 const gameServer = new Server({
-  server,
+	server,
 });
 
 // register your room handlers
-gameServer.define('my_room', MyRoom)
-  .filterBy(["title"]);
+gameServer.define('my_room', MyRoom, {global: globalSettings})
+	.filterBy(["title"]);
 
 /**
  * Register @colyseus/social routes

@@ -25,7 +25,6 @@ export class Card extends Schema {
 }
   
 class Deck {
-	id: string;
 	calls: number[];
 	responses: number[];
 	playing: {
@@ -33,8 +32,7 @@ class Deck {
 		responses: number[]
 	};
 	
-	constructor (id: string, calls: number, responses: number) {
-		this.id = id;
+	constructor (calls: number, responses: number) {
 		this.calls = [];
 		this.responses = [];
 		this.playing = {calls: [],
@@ -92,36 +90,32 @@ export class MyRoom extends Room<State> {
 	giveCardPending: Client[];
 	host: Client;
 	constants = {
-		callsNumber: 141,
-		responsesNumber: 330,
 		dealNumber: 7,
 		winLimit: 5
 	}
 	
 	onCreate (options: any) {
-		console.log("Created", options);
+		console.log("Created", options.title);
 
 		this.setState(new State());
 		this.setPatchRate(500);
 
-		// get number of cards from config
+		this.constants.dealNumber = options.global.dealNumber
+		this.constants.winLimit = options.global.winLimit
+
+		// needed for number of cards
+		this.state.deck = options.global.defaultDeck;
 		if (options.deck) {
-			let text = fs.readFileSync("config/decks.json", "utf-8")
-			let obj = JSON.parse(text);
-			if (obj[options.deck]) {
-				let d = obj[options.deck];
-				this.constants.callsNumber = d.calls;
-				this.constants.responsesNumber = d.responses;
-			}
-			this.state.deck = options.deck;
-		} else {
-			this.state.deck = DEFAULT_DECK;
+			if (options.global.decks[options.deck])
+				this.state.deck = options.deck;
+			else
+				console.log("Invalid deck:", options.deck);
 		}
 
+		let d = options.global.decks[this.state.deck];
+
 		this.host = null;
-		this.deck = new Deck("DHG4B",
-			this.constants.callsNumber,
-			this.constants.responsesNumber);
+		this.deck = new Deck(d.calls, d.responses);
 		this.state.roundNumber = 0;
 		this.cardsInRound = {};
 	}
@@ -303,6 +297,7 @@ export class MyRoom extends Room<State> {
 	onLeave (client: Client, consented: boolean) {
 		const id = client.id
 		console.log("Left", id, consented)
+		if (this.clients.length == 0) return
 		if (this.state.playerStatus[id] == "czar") this.chooseNewCzar();
 		if (id == this.host.id) this.host = this.clients[0];
 		else console.log("There is a host,", this.host.id)
