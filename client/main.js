@@ -218,7 +218,8 @@ function updateGame() {
 	})
 
 	if (!dropzonesCreated) {
-		// clear dropzones
+		// clear dropzones, returning forgotten cards
+		clearDropzone()
 		$("#submit .dropzone").remove();
 		const submit = $("#submit");
 		for (let i = 0; i < cardsInRound; i++) {
@@ -226,6 +227,13 @@ function updateGame() {
 		}
 		dropzonesCreated = true;
 	}
+}
+
+function clearDropzone() {
+	$("#submit .dropzone .item").toArray().forEach(card => {
+		id = Number.parseInt($(card).attr("cardid"));
+		addToHand(id, reference.responses[id])
+	})
 }
 
 function getCallText(id) {
