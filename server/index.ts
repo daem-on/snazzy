@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { Server } from "colyseus";
 import { monitor } from "@colyseus/monitor";
+import path from "path";
 // import socialRoutes from "@colyseus/social/express"
 
 import { MyRoom } from "./MyRoom";
@@ -12,7 +13,8 @@ const app = express()
 
 app.use(cors());
 app.use(express.json())
-app.use(express.static("../client"))
+const clientPath = __dirname.includes("build") ? "../../client" : "../client";
+app.use(express.static(path.join(__dirname, clientPath)))
 
 const server = http.createServer(app);
 const gameServer = new Server({
