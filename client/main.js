@@ -27,16 +27,17 @@ if (window.location.hash) {
 
 async function connect(settings) {
 	try {
+		const name = prompt("Choose a username.", "Username");
+
 		room = await client.joinOrCreate("my_room", settings)
 		console.log("Joined", room.name, "as", room.sessionId);
 		ui.ready = true;
 		ui.self = room.sessionId;
 	
-		const name = prompt("Choose a username.", "Username");
-
 		room.send({type: "name", text: name});
 		room.onMessage(onMessage);
 		room.onStateChange(onStateChange);
+		room.onLeave(onLeave)
 	} catch (e) {
 		console.log("JOIN ERROR", e);
 	}
@@ -179,7 +180,7 @@ function onMessage(msg) {
 
 // debug menu
 document.onkeyup = function(e) {
-	if (e.ctrlKey && e.altKey && e.which == 68) {
+	if (e.ctrlKey && e.altKey && e.key == "d") {
 		var cmd = prompt("Msg to send:");
 		room.send({type: "debug", cmd: cmd});
 	}
@@ -257,4 +258,8 @@ function getReferencesFromServer() {
 		if (room.state.deck)
 			loadReferences(room.state.deck);
 	}
+}
+
+function onLeave(code) {
+	console.log("Connection lost:", code)
 }
