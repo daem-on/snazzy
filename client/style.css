@@ -6,6 +6,10 @@
 	height: 100%;
 }
 
+#ui [v-cloak] {
+	display: none;
+}
+
 #ui {
 	display: flex;
 	flex-direction: row;

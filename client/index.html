@@ -1,17 +1,21 @@
-<script src="./lib/colyseus.js"></script>
-<script src="./lib/jquery-3.4.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.8/lib/draggable.bundle.js"></script>
-<script src="./lib/vue.min.js"></script>
+<!DOCTYPE html>
 
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css?family=Lato:400,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 
+<script src="./lib/colyseus.js"></script>
+<script src="./lib/jquery-3.4.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@shopify/draggable@1.0.0-beta.8/lib/draggable.bundle.js"></script>
+<script src="./lib/vue.min.js"></script>
+
+<title>Snazzy</title>
+
 <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
 
 <div id="app">
-<div id="game" class="hide">
-	<div id="ui" v-if="ready">
+<div id="game">
+	<div id="ui" v-if="ready" v-cloak>
 		<div>Round {{ state.roundNumber }}</div>
 		<div v-for="player in state.playerList">
 			<div class="player">

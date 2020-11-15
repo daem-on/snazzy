@@ -9,7 +9,7 @@
     "build": "tsc && pkg ."
   },
   "pkg": {
-    "assets": "../client/**/*"
+    "assets": ["../client/**/*", "config/**/*"]
   },
   "author": "daem_on",
   "license": "UNLICENSED",

@@ -5,7 +5,7 @@ import { Server } from "colyseus";
 import { monitor } from "@colyseus/monitor";
 import path from "path";
 import fs from "fs";
-// import socialRoutes from "@colyseus/social/express"
+import {default as defaultSettings} from "./settings.json";
 
 import { MyRoom } from "./MyRoom";
 
@@ -18,8 +18,19 @@ const clientPath = __dirname.includes("build") ? "../../client" : "../client";
 app.use(express.static(path.join(__dirname, clientPath)))
 app.use("/data", express.static("data"))
 
-let text = fs.readFileSync("config/settings.json", "utf-8")
-const globalSettings = JSON.parse(text);
+if (!fs.existsSync("data")) {
+	console.log("Server cannot start: data/ folder does not exist.")
+	process.exit()
+}
+
+let globalSettings;
+try {
+	globalSettings = JSON.parse(fs.readFileSync("settings.json", "utf-8"))
+} catch (e) {
+	console.log("There is no settings.json, using default:")
+	console.log(defaultSettings)
+	globalSettings = defaultSettings
+}
 
 const server = http.createServer(app);
 const gameServer = new Server({
@@ -29,14 +40,6 @@ const gameServer = new Server({
 // register your room handlers
 gameServer.define('my_room', MyRoom, {global: globalSettings})
 	.filterBy(["title"]);
-
-/**
- * Register @colyseus/social routes
- *
- * - uncomment if you want to use default authentication (https://docs.colyseus.io/authentication/)
- * - also uncomment the import statement
- */
-// app.use("/", socialRoutes);
 
 // register colyseus monitor AFTER registering your room handlers
 app.use("/colyseus", monitor());
