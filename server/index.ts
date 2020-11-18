@@ -2,7 +2,6 @@ import http from "http";
 import express from "express";
 import cors from "cors";
 import { Server } from "colyseus";
-import { monitor } from "@colyseus/monitor";
 import path from "path";
 import fs from "fs";
 import {default as defaultSettings} from "./settings.json";
@@ -40,9 +39,6 @@ const gameServer = new Server({
 // register your room handlers
 gameServer.define('my_room', MyRoom, {global: globalSettings})
 	.filterBy(["title"]);
-
-// register colyseus monitor AFTER registering your room handlers
-app.use("/colyseus", monitor());
 
 gameServer.listen(port);
 console.log(`Listening on ws://localhost:${ port }`)
