@@ -31,6 +31,10 @@ try {
 	globalSettings = defaultSettings
 }
 
+app.get("/settings.json", (req, res) => {
+	res.send(defaultSettings)
+})
+
 const server = http.createServer(app);
 const gameServer = new Server({
 	server,

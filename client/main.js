@@ -262,4 +262,5 @@ function getReferencesFromServer() {
 
 function onLeave(code) {
 	console.log("Connection lost:", code)
+	alert("Connection lost.")
 }
