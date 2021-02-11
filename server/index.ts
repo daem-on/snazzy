@@ -6,7 +6,7 @@ import path from "path";
 import fs from "fs";
 import {default as defaultSettings} from "./settings.json";
 
-import { MyRoom } from "./MyRoom";
+import { CardRoom } from "./Room";
 
 const port = Number(process.env.PORT || 2567);
 const app = express()
@@ -41,7 +41,7 @@ const gameServer = new Server({
 });
 
 // register your room handlers
-gameServer.define('my_room', MyRoom, {global: globalSettings})
+gameServer.define('card_room', CardRoom, {global: globalSettings})
 	.filterBy(["title"]);
 
 gameServer.listen(port);

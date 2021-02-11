@@ -79,7 +79,7 @@ export class State extends Schema {
 	@type("string") host: string;
 }
 
-export class MyRoom extends Room<State> {
+export class CardRoom extends Room<State> {
 	deck: Deck;
 	czar: number;
 	// workaround for not knowing how many cards are played
@@ -266,11 +266,8 @@ export class MyRoom extends Room<State> {
 	}
 
 	revealIfDone() {
-		let flag = false;
-		this.clients.forEach(client => {
-			if (this.state.playerStatus[client.id] == "playing") flag = true;
-		});
-		if (flag) return; // we're not done
+		// check if we're done
+		if (this.clients.some(client => this.state.playerStatus[client.id] == "playing")) return;
 
 		Deck.shuffle(this.state.responses);
 
@@ -291,16 +288,30 @@ export class MyRoom extends Room<State> {
 		this.clock.setTimeout(this.startRound.bind(this), 4000);
 	}
 
-	onLeave (client: Client, consented: boolean) {
+	isEmpty() {
+		return (this.clients.length == 0) || (this.clients.every(client => this.state.playerStatus[client.id] == "timeout"));
+	}
+
+	async onLeave (client: Client, consented: boolean) {
 		const id = client.id
-		console.log("Left", id, consented)
-		if (this.clients.length == 0) return
+		if (this.isEmpty()) this.disconnect();
 		if (this.state.playerStatus[id] == "czar") this.chooseNewCzar();
 		if (id == this.host.id) this.host = this.clients[0];
-		else console.log("There is a host,", this.host.id)
 		this.state.host = this.host.id;
-		this.state.playerList.splice(this.state.playerList.indexOf(id), 1)
-		this.revealIfDone();
+
+		try {
+			if (consented) throw new Error("consented leave");
+			this.state.playerStatus[id] = "timeout";
+			this.revealIfDone();
+
+			await this.allowReconnection(client, 20);
+
+			this.state.playerStatus[id] = undefined;
+			console.log("Rejoined", id);
+		} catch (e) {
+			this.state.playerList.splice(this.state.playerList.indexOf(id), 1);
+			console.log("Left", id, consented);
+		}
 	}
 
 	onDispose() {

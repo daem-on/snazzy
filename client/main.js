@@ -29,15 +29,16 @@ async function connect(settings) {
 	try {
 		const name = prompt("Choose a username.", "Username");
 
-		room = await client.joinOrCreate("my_room", settings)
-		console.log("Joined", room.name, "as", room.sessionId);
+		room = await client.joinOrCreate("card_room", settings)
+		console.log("Joined", room.id, "as", room.sessionId);
 		ui.ready = true;
 		ui.self = room.sessionId;
+		ui.roomId = room.id;
 	
 		room.send({type: "name", text: name});
 		room.onMessage(onMessage);
 		room.onStateChange(onStateChange);
-		room.onLeave(onLeave)
+		room.onLeave(onLeave);
 	} catch (e) {
 		console.log("JOIN ERROR", e);
 	}
@@ -47,7 +48,6 @@ function onStateChange(state) {
 	// Jesus christ vue do you ever work
 	ui.state = state;
 	ui.$forceUpdate();
-	console.log("STT");
 	getReferencesFromServer();
 }
 
@@ -261,6 +261,18 @@ function getReferencesFromServer() {
 }
 
 function onLeave(code) {
-	console.log("Connection lost:", code)
-	alert("Connection lost.")
+	$("#modal")[0].style.display = "initial";
+	$("#modal .content .code").text(code)
+}
+
+function attemptReconnect() {
+	client.reconnect(ui.roomId, ui.self).then(room => {
+		console.log("Rejoined", room.id, "as", room.sessionId);
+		room.onMessage(onMessage);
+		room.onStateChange(onStateChange);
+		room.onLeave(onLeave);
+		$("#modal")[0].style.display = "none";
+	}).catch(e => {
+		console.error("REJOIN ERROR", e);
+	});
 }
