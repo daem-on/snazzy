@@ -14,13 +14,13 @@ const cardElement = `<div class="white card"></div>`
 const dropzoneItem = `<div class="dropzone"></div>`
 
 if (window.location.hash) {
-	var arr = window.location.hash.slice(1).split("&")
-	if (arr.length > 1) {
-		connect({title: arr[0], deck: arr[1]});
-		loadReferences(arr[1]);
-	} else {
-		connect({title: arr[0]});
-	}
+	var arr = window.location.hash.slice(1).split("&");
+	var settings = {};
+	if (arr[0]) {settings.title = arr[0]}
+	if (arr[1]) {settings.deck = arr[1]}
+	if (arr[2]) {settings.winLimit = Number.parseInt(arr[2])}
+	if (arr[3]) {settings.dealNumber = Number.parseInt(arr[3])}
+	connect(settings);
 } else {
 	window.location.replace("/about.html");
 }
@@ -39,6 +39,7 @@ async function connect(settings) {
 		room.onMessage(onMessage);
 		room.onStateChange(onStateChange);
 		room.onLeave(onLeave);
+		window.onbeforeunload = room.leave;
 	} catch (e) {
 		console.log("JOIN ERROR", e);
 	}

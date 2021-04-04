@@ -86,19 +86,20 @@ export class CardRoom extends Room<State> {
 	cardsInRound: Record<string, number>;
 	giveCardPending: Client[];
 	host: Client;
-	constants = {
-		dealNumber: 7,
-		winLimit: 5
+	constants: {
+		dealNumber: number,
+		winLimit: number
 	}
 	
 	onCreate (options: any) {
 		console.log("Created", options.title);
+		console.log("Options:", options);
 
 		this.setState(new State());
 		this.setPatchRate(500);
 
-		this.constants.dealNumber = options.global.dealNumber
-		this.constants.winLimit = options.global.winLimit
+		this.constants.dealNumber = options.dealNumber || options.global.dealNumber;
+		this.constants.winLimit = options.winLimit || options.global.winLimit;
 
 		// needed for number of cards
 		this.state.deck = options.global.defaultDeck;
