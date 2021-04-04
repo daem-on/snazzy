@@ -264,11 +264,15 @@ function getReferencesFromServer() {
 function onLeave(code) {
 	$("#modal")[0].style.display = "initial";
 	$("#modal .content .code").text(code)
+	room = undefined;
 }
 
 function attemptReconnect() {
-	client.reconnect(ui.roomId, ui.self).then(room => {
+	client.joinById(ui.roomId).then(r => {
+		room = r;
+		room.send({type: "reconnect", text: ui.self})
 		console.log("Rejoined", room.id, "as", room.sessionId);
+		ui.self = room.sessionId;
 		room.onMessage(onMessage);
 		room.onStateChange(onStateChange);
 		room.onLeave(onLeave);

@@ -98,8 +98,10 @@ export class CardRoom extends Room<State> {
 		this.setState(new State());
 		this.setPatchRate(500);
 
-		this.constants.dealNumber = options.dealNumber || options.global.dealNumber;
-		this.constants.winLimit = options.winLimit || options.global.winLimit;
+		this.constants = {
+			dealNumber: options.dealNumber || options.global.dealNumber,
+			winLimit: options.winLimit || options.global.winLimit
+		};
 
 		// needed for number of cards
 		this.state.deck = options.global.defaultDeck;
@@ -123,10 +125,6 @@ export class CardRoom extends Room<State> {
 		this.state.playerList.push(client.id);
 		if (!this.host) this.host = client;
 		this.state.host = this.host.id;
-
-		if (this.state.roundNumber > 0) {
-			this.dealCardsOnce(client);
-		}
 	}
 
 	dealCards () {
@@ -145,7 +143,8 @@ export class CardRoom extends Room<State> {
 	}
 
 	dealCardsOnce(client: Client) {
-		if (this.deck.playing.responses.length < 8) this.deck.reshuffleResponses();
+		if (this.deck.playing.responses.length < this.constants.dealNumber)
+			this.deck.reshuffleResponses();
 
 		let hand: number[] = [];
 		for (let i = 0; i < this.constants.dealNumber; i++) {
@@ -255,6 +254,12 @@ export class CardRoom extends Room<State> {
 			}
 		} else if (message.type == "name") {
 			this.state.playerNames[client.id] = message.text;
+			if (this.state.roundNumber > 0) this.dealCardsOnce(client);
+		} else if (message.type == "reconnect") {
+			if (this.state.playerStatus[message.text] == "timeout") {
+				this.state.playerPoints[client.id] = this.state.playerPoints[message.text];
+				this.state.playerNames[client.id] = this.state.playerNames[message.text];
+			}
 		} else if (message.type == "debug") {
 			if (message.cmd == "newRound") {
 				this.givePendingCards();
@@ -295,24 +300,15 @@ export class CardRoom extends Room<State> {
 
 	async onLeave (client: Client, consented: boolean) {
 		const id = client.id
-		if (this.isEmpty()) this.disconnect();
+		// if (this.isEmpty()) this.disconnect();
 		if (this.state.playerStatus[id] == "czar") this.chooseNewCzar();
 		if (id == this.host.id) this.host = this.clients[0];
 		this.state.host = this.host.id;
+		this.state.playerList.splice(this.state.playerList.indexOf(id), 1);
 
-		try {
-			if (consented) throw new Error("consented leave");
-			this.state.playerStatus[id] = "timeout";
-			this.revealIfDone();
-
-			await this.allowReconnection(client, 20);
-
-			this.state.playerStatus[id] = undefined;
-			console.log("Rejoined", id);
-		} catch (e) {
-			this.state.playerList.splice(this.state.playerList.indexOf(id), 1);
-			console.log("Left", id, consented);
-		}
+		this.revealIfDone();
+		this.state.playerStatus[id] = "timeout";
+		console.log("Left", id, consented);
 	}
 
 	onDispose() {
