@@ -16,6 +16,16 @@ enum Msg {
 	Chat
 }
 
+enum Response {
+	name,
+	pickCard,
+	playCard,
+	debug,
+	startGame,
+	reconnect,
+	chat
+}
+
 export class Card extends Schema {
 	@type(["number"]) cardid = new ArraySchema<number>();
 	@type("string") playedBy: string;
@@ -188,13 +198,13 @@ export class CardRoom extends Room<State> {
 	}
 
 	onMessage (client: Client, message: any) {
-		if (message.type == "chat") {
+		if (message.t == Response.chat) {
 			console.log("Message", client.id, message)
 
 			this.broadcast({
 				t: Msg.Chat, sender: client.id, text: message.text
 			}, { except: client })
-		} else if (message.type == "playCard") {
+		} else if (message.t == Response.playCard) {
 			// see if the player has the card
 
 			if (this.state.playerStatus[client.id] != "playing") {
@@ -216,7 +226,7 @@ export class CardRoom extends Room<State> {
 
 			this.broadcast({t: Msg.Update}, {afterNextPatch: true});
 			this.revealIfDone();
-		} else if (message.type == "pickCard") {
+		} else if (message.t == Response.pickCard) {
 			if (this.state.playerStatus[client.id] != "czar") {
 				this.send(client, {t: Msg.Error, message: "You're not the Czar."})
 				return;
@@ -244,7 +254,7 @@ export class CardRoom extends Room<State> {
 
 			this.givePendingCards();
 			this.endRound();
-		} else if (message.type == "startGame") {
+		} else if (message.t == Response.startGame) {
 			if (client != this.host)
 				return this.send(client, {t: Msg.Error, message: "You're not the Host."});
 			if (this.state.roundNumber == 0) { // if it wasn't started already
@@ -252,15 +262,15 @@ export class CardRoom extends Room<State> {
 				this.dealCards();
 				this.startRound();
 			}
-		} else if (message.type == "name") {
+		} else if (message.t == Response.name) {
 			this.state.playerNames[client.id] = message.text;
 			if (this.state.roundNumber > 0) this.dealCardsOnce(client);
-		} else if (message.type == "reconnect") {
+		} else if (message.t == Response.reconnect) {
 			if (this.state.playerStatus[message.text] == "timeout") {
 				this.state.playerPoints[client.id] = this.state.playerPoints[message.text];
 				this.state.playerNames[client.id] = this.state.playerNames[message.text];
 			}
-		} else if (message.type == "debug") {
+		} else if (message.t == Response.debug) {
 			if (message.cmd == "newRound") {
 				this.givePendingCards();
 				this.startRound();

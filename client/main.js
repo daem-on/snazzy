@@ -13,6 +13,10 @@ const cardItem = `<div class="item">
 const cardElement = `<div class="white card"></div>`
 const dropzoneItem = `<div class="dropzone"></div>`
 
+var Msg = {};
+["name", "pickCard", "playCard", "debug", "startGame", "reconnect"]
+.forEach((e, i) => {Msg[e] = i});
+
 if (window.location.hash) {
 	var arr = window.location.hash.slice(1).split("&");
 	var settings = {};
@@ -35,7 +39,7 @@ async function connect(settings) {
 		ui.self = room.sessionId;
 		ui.roomId = room.id;
 	
-		room.send({type: "name", text: name});
+		room.send({t: Msg.name, text: name});
 		room.onMessage(onMessage);
 		room.onStateChange(onStateChange);
 		room.onLeave(onLeave);
@@ -61,7 +65,7 @@ function customCardItem(index, text) {
 function pick(index) {
 	console.log("You picked " + index);
 	if (!room || !room.state.reveal) return;
-	room.send({type: "pickCard", cardIndex: index})
+	room.send({t: Msg.pickCard, cardIndex: index})
 }
 
 function remove() {
@@ -79,7 +83,7 @@ function remove() {
 
 function playCard(array) {
 	if (!room) return;
-	room.send({type: "playCard", cardArray: array})
+	room.send({t: Msg.playCard, cardArray: array})
 }
 
 function revealCards() {
@@ -183,7 +187,7 @@ function onMessage(msg) {
 document.onkeyup = function(e) {
 	if (e.ctrlKey && e.altKey && e.key == "d") {
 		var cmd = prompt("Msg to send:");
-		room.send({type: "debug", cmd: cmd});
+		room.send({t: Msg.debug, cmd: cmd});
 	}
 };
 
@@ -201,7 +205,7 @@ async function dealPatch(hand) {
 
 function startGame() {
 	if (!room) return;
-	room.send({type: "startGame"});
+	room.send({t: Msg.startGame});
 }
 
 function updateGame() {
@@ -270,7 +274,7 @@ function onLeave(code) {
 function attemptReconnect() {
 	client.joinById(ui.roomId).then(r => {
 		room = r;
-		room.send({type: "reconnect", text: ui.self})
+		room.send({t: Msg.reconnect, text: ui.self})
 		console.log("Rejoined", room.id, "as", room.sessionId);
 		ui.self = room.sessionId;
 		room.onMessage(onMessage);

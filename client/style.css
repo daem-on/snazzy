@@ -160,7 +160,7 @@ html {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	font-family: Lato, Helvetica, sans-serif;
-	overflow-y: hidden;
+	/* overflow-y: hidden; */
 }
 
 @media screen and (max-height: 600px) {
