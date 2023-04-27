@@ -1,36 +1,8 @@
 import { Room, Client } from "colyseus";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
+import { Msg, Response } from "../shared-enums";
+import { Card, State } from "./shared-schema";
 
-enum Msg {
-	Deal,
-	Update,
-	DealPatch,
-	GiveCard,
-	Czar,
-	NewRound,
-	Reveal,
-	Winner,
-	Over,
-	Restart,
-	Error,
-	Chat
-}
-
-enum Response {
-	name,
-	pickCard,
-	playCard,
-	debug,
-	startGame,
-	reconnect,
-	chat
-}
-
-export class Card extends Schema {
-	@type(["number"]) cardid = new ArraySchema<number>();
-	@type("string") playedBy: string;
-}
-  
 class Deck {
 	calls: number[];
 	responses: number[];
@@ -74,19 +46,6 @@ class Deck {
 		var r = this.responses.slice(0, this.responses.length);
 		this.playing.responses = Deck.shuffle(r);
 	}
-}
-
-export class State extends Schema {
-	@type([Card]) responses = new ArraySchema<Card>();
-	@type(Card) call: Card = new Card();
-	@type("boolean") reveal = false;
-	@type(["string"]) playerList = new ArraySchema<string>();
-	@type({map: "string"}) playerStatus = new MapSchema<string>();
-	@type({map: "string"}) playerNames = new MapSchema<string>();
-	@type({map: "number"}) playerPoints = new MapSchema<number>();
-	@type("number") roundNumber: number;
-	@type("string") deck: string;
-	@type("string") host: string;
 }
 
 export class CardRoom extends Room<State> {

@@ -1,0 +1,14 @@
+html {
+	background-color: #e6a07a;
+	background-image: url("@/assets/wood-pattern.png");
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	font-family: Lato, Helvetica, sans-serif;
+}
+
+@media screen and (max-height: 600px) {
+	html {
+		overflow-y: auto;
+	}
+}

@@ -39,8 +39,8 @@ async function connect(settings) {
 		ui.self = room.sessionId;
 		ui.roomId = room.id;
 	
-		room.send({t: Msg.name, text: name});
-		room.onMessage(onMessage);
+		room.send(Msg.name, {text: name});
+		room.onMessage("*", onMessage);
 		room.onStateChange(onStateChange);
 		room.onLeave(onLeave);
 		window.onbeforeunload = room.leave;
@@ -65,7 +65,7 @@ function customCardItem(index, text) {
 function pick(index) {
 	console.log("You picked " + index);
 	if (!room || !room.state.reveal) return;
-	room.send({t: Msg.pickCard, cardIndex: index})
+	room.send(Msg.pickCard, {cardIndex: index})
 }
 
 function remove() {
@@ -83,7 +83,7 @@ function remove() {
 
 function playCard(array) {
 	if (!room) return;
-	room.send({t: Msg.playCard, cardArray: array})
+	room.send(Msg.playCard, {cardArray: array})
 }
 
 function revealCards() {
@@ -150,35 +150,35 @@ draggable.on("drag:start", event => {
 	if (iAmCzar) event.cancel();
 })
 
-function onMessage(msg) {
+function onMessage(type, msg) {
 	console.log("MSG:", msg);
 
-	if (msg.t == 0) { // Deal
+	if (type == 0) { // Deal
 		msg.hand.forEach(card => {
 			addToHand(card, reference.responses[card]);
 		});
-	} else if (msg.t == 1) { // Update
+	} else if (type == 1) { // Update
 		updateGame();
-	} else if (msg.t == 2) { // DealPatch
+	} else if (type == 2) { // DealPatch
 		dealPatch(msg.hand)
-	} else if (msg.t == 3) { // GiveCard
+	} else if (type == 3) { // GiveCard
 		addToHand(msg.hand, reference.responses[msg.hand]);
-	} else if (msg.t == 4) { // Czar
+	} else if (type == 4) { // Czar
 		iAmCzar = true;
 		$("#hand, #remove").addClass("czar");
-	} else if (msg.t == 5) { // NewRound
+	} else if (type == 5) { // NewRound
 		iAmCzar = false;
 		dropzonesCreated = false;
 		$("#hand, #remove").removeClass("czar");
-	} else if (msg.t == 6) { // Reveal
+	} else if (type == 6) { // Reveal
 		revealCards();
-	} else if (msg.t == 7) { // Winner
+	} else if (type == 7) { // Winner
 		$(`.white.card[index=${msg.cardIndex}]`)
 			.addClass("winner");
-	} else if (msg.t == 8) { // Over
+	} else if (type == 8) { // Over
 		alert("Game over. The winner is " 
 		+ room.state.playerNames[msg.winner] + ".")
-	} else if (msg.t == 9) { // Restart
+	} else if (type == 9) { // Restart
 		location.reload();
 	}
 }
@@ -187,7 +187,7 @@ function onMessage(msg) {
 document.onkeyup = function(e) {
 	if (e.ctrlKey && e.altKey && e.key == "d") {
 		var cmd = prompt("Msg to send:");
-		room.send({t: Msg.debug, cmd: cmd});
+		room.send(Msg.debug, {cmd: cmd});
 	}
 };
 
@@ -205,7 +205,7 @@ async function dealPatch(hand) {
 
 function startGame() {
 	if (!room) return;
-	room.send({t: Msg.startGame});
+	room.send(Msg.startGame);
 }
 
 function updateGame() {
@@ -274,7 +274,7 @@ function onLeave(code) {
 function attemptReconnect() {
 	client.joinById(ui.roomId).then(r => {
 		room = r;
-		room.send({t: Msg.reconnect, text: ui.self})
+		room.send(Msg.reconnect, {text: ui.self})
 		console.log("Rejoined", room.id, "as", room.sessionId);
 		ui.self = room.sessionId;
 		room.onMessage(onMessage);
