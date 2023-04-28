@@ -1,10 +1,11 @@
-import http from "http";
-import express from "express";
-import cors from "cors";
+import { WebSocketTransport } from "@colyseus/ws-transport";
 import { Server } from "colyseus";
-import path from "path";
+import cors from "cors";
+import express from "express";
 import fs from "fs";
-import {default as defaultSettings} from "./settings.json";
+import http from "http";
+import path from "path";
+import { default as defaultSettings } from "./settings.json";
 
 import { CardRoom } from "./Room";
 
@@ -37,7 +38,9 @@ app.get("/settings.json", (req, res) => {
 
 const server = http.createServer(app);
 const gameServer = new Server({
-	server,
+	transport: new WebSocketTransport({
+		server
+	})
 });
 
 // register your room handlers
