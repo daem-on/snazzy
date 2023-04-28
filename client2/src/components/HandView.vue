@@ -1,35 +1,43 @@
 <script setup lang="ts">
 
 import type { DroppableDroppedEvent, DroppableReturnedEvent, DroppableStartEvent, DroppableStopEvent } from "@shopify/draggable";
-import { reactive, watch } from "vue";
-import type { Card } from "./Game.vue";
+import { reactive, ref, watch } from "vue";
+import type { CardType } from "./Game.vue";
 import CardContainer from "./CardContainer.vue";
+import type { DeckDefinition } from "@/fetchDeck";
 
 const props = defineProps<{
-	hand: Set<Card>,
-	handSize: number
+	hand: Set<number>,
+	handSize: number,
+	czar: boolean,
+	definition: DeckDefinition,
+	cardsInRound: number
 }>();
 
 const emit = defineEmits<{
-	(e: "play", cards: Card[]): void
+	(e: "play", cards: number[]): void
 }>();
 
-const picked: (Card | undefined)[] = reactive([undefined]);
-const hand: (Card | undefined)[] = reactive([...props.hand]);
+const picked: (number | undefined)[] = reactive([undefined]);
+const hand: (number | undefined)[] = reactive([...props.hand]);
 
+while (picked.length < props.cardsInRound) picked.push(undefined);
 while (hand.length < props.handSize) hand.push(undefined);
 
-const lists: Record<string, (Card | undefined)[]> = {picked, hand};
+const lists: Record<string, (number | undefined)[]> = {picked, hand};
 
 const options = {
-	draggable: '.item',
-	dropzone: '.dropzone',
+	draggable: ".item",
+	dropzone: ".dropzone",
 }
 
 let dragging: DroppableStartEvent | undefined = undefined;
 let currentTarget: DroppableDroppedEvent | undefined = undefined;
 
-function start(e: DroppableStartEvent) { dragging = e; }
+function start(e: DroppableStartEvent) {
+	if (props.czar) return e.cancel();
+	dragging = e;
+}
 function dropped(e: DroppableDroppedEvent) { currentTarget = e; }
 function returned(e: DroppableReturnedEvent) { currentTarget = undefined; }
 function stop(e: DroppableStopEvent) {
@@ -61,6 +69,20 @@ function stop(e: DroppableStopEvent) {
 	}
 }
 
+function returnToHand() {
+	for (let i = 0; i < picked.length; i++) {
+		const card = picked[i];
+		if (card == undefined) continue;
+		const index = hand.findIndex(x => x == undefined);
+		if (index == -1) {
+			console.error("Hand is full");
+			return;
+		}
+		hand.splice(index, 1, card);
+		picked.splice(i, 1, undefined);
+	}
+}
+
 watch(props.hand, (newHand, oldHand) => {
 	const added = [...newHand].filter(x => !oldHand.has(x));
 	const removed = [...oldHand].filter(x => !newHand.has(x));
@@ -82,8 +104,15 @@ watch(props.hand, (newHand, oldHand) => {
 	}
 });
 
+watch(ref(props.cardsInRound), (newValue, oldValue) => {
+	returnToHand();
+	console.log("Cards in round changed", oldValue, newValue);
+	picked.length = newValue;
+	for (let i = 0; i < picked.length; i++) picked[i] = undefined;
+});
+
 function playPicked() {
-	const cards = picked.filter(x => x != undefined) as Card[];
+	const cards = picked.filter(x => x != undefined) as number[];
 	emit("play", cards);
 	for (let i = 0; i < cards.length; i++) {
 		const index = picked.findIndex(x => x == cards[i]);
@@ -95,10 +124,10 @@ function playPicked() {
 
 <template>
 	<vue-droppable :options="options" @droppable:start="start" @droppable:dropped="dropped" @droppable:returned="returned" @droppable:stop="stop">
-		<CardContainer :list="picked" listName="picked"></CardContainer>
+		<CardContainer :list="picked" listName="picked" :definition="definition"></CardContainer>
 		<button @click="playPicked">Play card</button>
 		<hr />
-		<CardContainer :list="hand" listName="hand"></CardContainer>
+		<CardContainer :list="hand" listName="hand" :definition="definition"></CardContainer>
 	</vue-droppable>
 </template>
 

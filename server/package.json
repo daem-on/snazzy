@@ -4,8 +4,9 @@
   "description": "online implementation of the Cards Agains Humanity tabletop game",
   "main": "build/index.js",
   "bin": "build/index.js",
+  "type": "module",
   "scripts": {
-    "start": "ts-node index.ts",
+    "start": "ts-node --esm index.ts",
     "build": "tsc && pkg ."
   },
   "pkg": {
@@ -31,6 +32,7 @@
     "cors": "^2.8.5",
     "download-file": "^0.1.5",
     "express": "^4.16.4",
-    "express-jwt": "^8.4.1"
+    "express-jwt": "^8.4.1",
+    "node-fetch": "^3.3.1"
   }
 }

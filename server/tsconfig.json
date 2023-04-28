@@ -2,9 +2,12 @@
   "compilerOptions": {
     "outDir": "build",
     "target": "es6",
-    "module": "commonjs",
+    "module": "ES2022",
+    "moduleResolution": "node",
     "strict": true,
-    "strictNullChecks": false,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strictNullChecks": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "experimentalDecorators": true

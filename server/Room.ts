@@ -1,27 +1,25 @@
-import { Room, Client } from "colyseus";
-import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
-import { Msg, Response } from "../shared-enums";
-import { Card, State } from "./shared-schema";
+import { ArraySchema } from "@colyseus/schema";
+import { Client, Room } from "colyseus";
+import { Msg, Response } from "./shared-enums.ts";
+import { ResponseCard, PlayerState, State } from "./shared-schema.ts";
+import { fetchDeck } from "./fetchDeck.ts";
 
 class Deck {
 	calls: number[];
+	callLengths: number[];
 	responses: number[];
 	playing: {
 		calls: number[],
 		responses: number[]
 	};
 	
-	constructor (calls: number, responses: number) {
-		this.calls = [];
-		this.responses = [];
-		this.playing = {calls: [],
-			responses: []};
-		for (let i = 0; i < calls; i++) {
-			this.calls.push(i);
-		};
-		for (let i = 0; i < responses; i++) {
-			this.responses.push(i);
-		};
+	constructor (calls: string[][], responses: number) {
+		this.calls = Array.from({length: calls.length}, (_, i) => i);
+		this.responses = Array.from({length: responses}, (_, i) => i);
+		this.playing = {calls: [], responses: []};
+		this.callLengths = Array.from(
+			{length: calls.length}, (_, i) => calls[i].length
+		);
 		this.reshuffleCalls(); this.reshuffleResponses();
 	}
 	
@@ -49,42 +47,37 @@ class Deck {
 }
 
 export class CardRoom extends Room<State> {
-	deck: Deck;
-	czar: number;
+	deck!: Deck;
+	czar!: number;
 	// workaround for not knowing how many cards are played
-	cardsInRound: Record<string, number>;
-	giveCardPending: Client[];
-	host: Client;
-	constants: {
+	cardsInRound: Record<string, number> = {};
+	giveCardPending: Client[] = [];
+	host?: Client = undefined;
+	constants!: {
 		dealNumber: number,
 		winLimit: number
 	}
 	
-	onCreate (options: any) {
+	async onCreate(options: any) {
 		console.log("Created", options.title);
 		console.log("Options:", options);
 
 		this.setState(new State());
-		this.setPatchRate(500);
+		this.setPatchRate(100);
 
 		this.constants = {
-			dealNumber: options.dealNumber || options.global.dealNumber,
-			winLimit: options.winLimit || options.global.winLimit
+			dealNumber: options.dealNumber || 7,
+			winLimit: options.winLimit || 5
 		};
 
-		// needed for number of cards
-		this.state.deck = options.global.defaultDeck;
-		if (options.deck) {
-			if (options.global.decks[options.deck])
-				this.state.deck = options.deck;
-			else
-				console.log("Invalid deck:", options.deck);
+		const deck = await fetchDeck(options.deck);
+		if (deck == null) {
+			this.disconnect();
+			return;
 		}
+		this.state.deckUrl = options.deck;
 
-		let d = options.global.decks[this.state.deck];
-
-		this.host = null;
-		this.deck = new Deck(d.calls, d.responses);
+		this.deck = new Deck(deck.calls, deck.responses.length);
 		this.state.roundNumber = 0;
 		this.cardsInRound = {};
 
@@ -99,13 +92,13 @@ export class CardRoom extends Room<State> {
 		this.onMessage(Response.playCard, (client, data) => {
 			// see if the player has the card
 
-			if (this.state.playerStatus.get(client.id) != "playing") {
-				this.send(client, Msg.Error, {message: "You have played this turn."})
+			if (this.state.players.get(client.id)?.status != "playing") {
+				this.sendError(client, "You have played this turn.")
 				return;
 			}
 
 			// store the card in responses
-			let c = new Card();
+			let c = new ResponseCard();
 			for (const num of data.cardArray) {
 				c.cardid.push(num);
 			}
@@ -114,34 +107,33 @@ export class CardRoom extends Room<State> {
 
 			this.giveCardPending.push(client);
 			this.cardsInRound[client.id] = data.cardArray.length;
-			this.state.playerStatus.set(client.id, "played");
+			this.state.players.get(client.id)!.status = "played";
 
 			this.broadcast(Msg.Update, null, {afterNextPatch: true});
 			this.revealIfDone();
 		});
 
 		this.onMessage(Response.pickCard, (client, data) => {
-			if (this.state.playerStatus.get(client.id) != "czar") {
-				this.send(client, Msg.Error, {message: "You're not the Czar."})
+			if (this.state.players.get(client.id)?.status != "czar") {
+				this.sendError(client, "You're not the Czar.")
 				return;
 			} if (!this.state.reveal) {
-				this.send(client, Msg.Error, {message: "The cards are not revealed yet."})
+				this.sendError(client, "The cards are not revealed yet.")
 				return;
 			}
 
 			if (data.cardIndex > this.state.responses.length-1){
-				this.send(client, Msg.Error, {message: "That's not possible."})
+				this.sendError(client, "That's not possible.")
 				return;
 			}
 			let picked = this.state.responses[data.cardIndex];
-			if (!this.state.playerPoints.get(picked.playedBy))
-				this.state.playerPoints.set(picked.playedBy, 0);
-			this.state.playerPoints.set(picked.playedBy, this.state.playerPoints.get(picked.playedBy)+1);
+			this.state.players.get(picked.playedBy)!.points++;
 
+			this.state.responses.at(data.cardIndex).winner = true;
 			this.broadcast(Msg.Winner, {cardIndex: data.cardIndex });
-			this.state.playerStatus.set(client.id, "played");
+			this.state.players.get(client.id)!.status = "played";
 
-			if (this.state.playerPoints.get(picked.playedBy) > this.constants.winLimit) {
+			if (this.state.players.get(picked.playedBy)!.points > this.constants.winLimit) {
 				this.broadcast(Msg.Over, {winner: picked.playedBy });
 				return this.disconnect();
 			}
@@ -152,7 +144,7 @@ export class CardRoom extends Room<State> {
 
 		this.onMessage(Response.startGame, (client, data) => {
 			if (client != this.host)
-				return this.send(client,  Msg.Error, {message: "You're not the Host."});
+				return this.sendError(client, "You're not the Host.");
 			if (this.state.roundNumber == 0) { // if it wasn't started already
 				this.czar = -1;
 				this.dealCards();
@@ -161,14 +153,16 @@ export class CardRoom extends Room<State> {
 		});
 
 		this.onMessage(Response.name, (client, data) => {
-			this.state.playerNames.set(client.id, data.text);
+			this.state.players.get(client.id)!.name = data.text;
 			if (this.state.roundNumber > 0) this.dealCardsOnce(client);
 		});
 
 		this.onMessage(Response.reconnect, (client, data) => {
-			if (this.state.playerStatus.get(data.text) == "timeout") {
-				this.state.playerPoints.set(client.id, this.state.playerPoints.get(data.text));
-				this.state.playerNames.set(client.id, this.state.playerNames.get(data.text));
+			const oldPlayer = this.state.players.get(data.text);
+			const player = this.state.players.get(client.id)!;
+			if (oldPlayer?.status == "timeout") {
+				player.points = oldPlayer.points;
+				player.name = oldPlayer.name;
 			}
 		});
 
@@ -183,14 +177,19 @@ export class CardRoom extends Room<State> {
 		});
 	}
 
-	onJoin (client: Client, options: any) {
+	sendError(client: Client, message: string) {
+		client.send(Msg.Error, {message});
+		console.log("Error", client.id, message);
+	}
+
+	onJoin(client: Client, options: any) {
 		console.log("Joined", client.id, options)
-		this.state.playerList.push(client.id);
+		this.state.players.set(client.id, new PlayerState());
 		if (!this.host) this.host = client;
 		this.state.host = this.host.id;
 	}
 
-	dealCards () {
+	dealCards() {
 		if (this.deck.playing.responses.length < 
 			(this.clients.length * this.constants.dealNumber)) {
 			console.error("Not enough cards to play with!")
@@ -199,9 +198,9 @@ export class CardRoom extends Room<State> {
 		this.clients.forEach(client => {
 			let hand: number[] = [];
 			for (let i = 0; i < this.constants.dealNumber; i++) {
-				hand.push(this.deck.playing.responses.pop());
+				hand.push(this.deck.playing.responses.pop()!);
 			}
-			this.send(client, Msg.Deal, {hand: hand})
+			client.send(Msg.Deal, {hand: hand})
 		});
 	}
 
@@ -211,24 +210,24 @@ export class CardRoom extends Room<State> {
 
 		let hand: number[] = [];
 		for (let i = 0; i < this.constants.dealNumber; i++) {
-			hand.push(this.deck.playing.responses.pop());
+			hand.push(this.deck.playing.responses.pop()!);
 		}
-		this.send(client, Msg.DealPatch, {hand: hand})
-		this.state.playerStatus.set(client.id, "playing");
+		client.send(Msg.DealPatch, {hand: hand})
+		this.state.players.get(client.id)!.status = "playing";
 	}
 
-	giveCard (client: Client) {
+	giveCard(client: Client) {
 		if (this.deck.playing.responses.length < 3) this.deck.reshuffleResponses();
 
 		var hand = (this.deck.playing.responses.pop());
-		this.send(client, Msg.GiveCard, {hand: hand});
+		client.send(Msg.GiveCard, {hand: hand});
 	}
 
 	startRound() {
-		this.clients.forEach(client => {
-			this.state.playerStatus.set(client.id, "playing")
+		this.state.players.forEach(player => {
+			player.status = "playing";
 		});
-		this.state.responses = new ArraySchema<Card>();
+		this.state.responses = new ArraySchema<ResponseCard>();
 		this.state.reveal = false;
 
 		this.state.roundNumber++;
@@ -238,21 +237,21 @@ export class CardRoom extends Room<State> {
 		this.chooseNewCzar();
 
 		if (this.deck.playing.calls.length < 3) this.deck.reshuffleCalls();
-		this.state.call = new Card();
-		this.state.call.cardid[0] = this.deck.playing.calls.pop();
+		this.state.callId = this.deck.playing.calls.pop()!;
+		this.state.cardsInRound = this.deck.callLengths[this.state.callId]-1;
 		this.broadcast(Msg.Update, null, {afterNextPatch: true});
 	}
 
 	chooseNewCzar() {
 		this.czar++;
 		if (this.czar > this.clients.length-1) this.czar = 0;
-		this.send(this.clients[this.czar], Msg.Czar, null);
-		this.state.playerStatus.set(this.clients[this.czar].id, "czar");
+		this.clients[this.czar].send(Msg.Czar, null);
+		this.state.players.get(this.clients[this.czar].id)!.status = "czar";
 	}
 
 	revealIfDone() {
 		// check if we're done
-		if (this.clients.some(client => this.state.playerStatus.get(client.id) == "playing")) return;
+		if ([...this.state.players.values()].some(player => player.status == "playing")) return;
 
 		Deck.shuffle(this.state.responses);
 
@@ -274,20 +273,20 @@ export class CardRoom extends Room<State> {
 	}
 
 	isEmpty() {
-		return (this.clients.length == 0) || (this.clients.every(client => this.state.playerStatus.get(client.id) == "timeout"));
+		return (this.clients.length == 0)
+			|| (this.clients.every(client => this.state.players.get(client.id)?.status == "timeout"));
 	}
 
-	async onLeave (client: Client, consented: boolean) {
+	async onLeave(client: Client, consented: boolean) {
 		const id = client.id
-		// if (this.isEmpty()) this.disconnect();
-		if (this.state.playerStatus.get(id) == "czar") this.chooseNewCzar();
-		if (id == this.host.id) this.host = this.clients[0];
-		this.state.host = this.host.id;
-		this.state.playerList.splice(this.state.playerList.indexOf(id), 1);
+		if (this.isEmpty()) return;
+		if (this.state.players.get(id)?.status == "czar") this.chooseNewCzar();
+		if (id == this.host?.id) this.host = this.clients[0];
+		this.state.host = this.host!.id;
 
 		this.revealIfDone();
-		this.state.playerStatus.set(id, "timeout");
-		console.log("Left", id, consented);
+		this.state.players.get(id)!.status = "timeout";
+		console.log("Client left", id, consented);
 	}
 
 	onDispose() {

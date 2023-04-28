@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import type { Card } from './Game.vue';
+import type { CardType } from "./Game.vue";
+import Card from "./Card.vue";
+import type { DeckDefinition } from "@/fetchDeck";
 
 defineProps<{
-	list: (Card | undefined)[],
+	list: (number | undefined)[],
 	listName: string,
+	definition: DeckDefinition
 }>();
 
 </script>
@@ -13,12 +16,8 @@ defineProps<{
 		<div v-for="(entry, index) in list" class="dropzone" :list="listName" :key="index" :index="index"
 			:class="{ 'draggable-dropzone--occupied': entry !== undefined }">
 
-			<div v-if="entry !== undefined" class="item" :cardId="entry.id">
-				<div class="card">
-					<p>
-						{{ entry.text }} ({{ entry.id }})
-					</p>
-				</div>
+			<div v-if="entry !== undefined" class="item" :cardId="entry">
+				<Card :id="entry" :definition="definition" type="white" />
 			</div>
 
 		</div>
