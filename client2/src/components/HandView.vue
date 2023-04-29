@@ -1,15 +1,12 @@
 <script setup lang="ts">
 
-import type { DeckDefinition } from "@/DeckDefinition.ts";
 import type { DroppableDroppedEvent, DroppableReturnedEvent, DroppableStartEvent, DroppableStopEvent } from "@shopify/draggable";
 import { reactive, ref, watch } from "vue";
 import CardContainer from "./CardContainer.vue";
 
 const props = defineProps<{
 	hand: Set<number>,
-	handSize: number,
 	czar: boolean,
-	definition: DeckDefinition,
 	cardsInRound: number
 }>();
 
@@ -21,7 +18,7 @@ const picked: (number | undefined)[] = reactive([undefined]);
 const hand: (number | undefined)[] = reactive([...props.hand]);
 
 while (picked.length < props.cardsInRound) picked.push(undefined);
-while (hand.length < props.handSize) hand.push(undefined);
+while (hand.length < props.hand.size) hand.push(undefined);
 
 const lists: Record<string, (number | undefined)[]> = {picked, hand};
 
@@ -123,10 +120,10 @@ function playPicked() {
 
 <template>
 	<vue-droppable :options="options" @droppable:start="start" @droppable:dropped="dropped" @droppable:returned="returned" @droppable:stop="stop">
-		<CardContainer :list="picked" listName="picked" :definition="definition"></CardContainer>
+		<CardContainer :list="picked" listName="picked"></CardContainer>
 		<button @click="playPicked">Play card</button>
 		<hr />
-		<CardContainer :list="hand" listName="hand" :definition="definition"></CardContainer>
+		<CardContainer :list="hand" listName="hand"></CardContainer>
 	</vue-droppable>
 </template>
 

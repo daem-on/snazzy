@@ -186,6 +186,7 @@ export class CardRoom extends Room<State> {
 		if (this._disposed) return client.leave(1001);
 		console.log("Joined", client.id, options)
 		this.state.players.set(client.id, new PlayerState());
+		this.ensureCzar();
 		if (!this.host) this.host = client;
 		this.state.host = this.host.id;
 	}
@@ -242,6 +243,12 @@ export class CardRoom extends Room<State> {
 		this.state.cardsInRound = this.deck.callLengths[this.state.callId]-1;
 	}
 
+	ensureCzar() {
+		if (this.state.roundNumber <= 0) return;
+		if ([...this.state.players.values()].some(player => player.status == "czar")) return;
+		this.chooseNewCzar();
+	}
+
 	chooseNewCzar() {
 		this.czar++;
 		if (this.czar > this.clients.length-1) this.czar = 0;
@@ -255,6 +262,7 @@ export class CardRoom extends Room<State> {
 		Deck.shuffle(this.state.responses);
 
 		this.state.reveal = true;
+		// TODO: start timeout
 	}
 
 	givePendingCards() {
@@ -277,14 +285,15 @@ export class CardRoom extends Room<State> {
 
 	async onLeave(client: Client, consented: boolean) {
 		const id = client.id
-		if (this.isEmpty()) return;
-		if (this.state.players.get(id)?.status == "czar") this.chooseNewCzar();
-		if (id == this.host?.id) this.host = this.clients[0];
-		this.state.host = this.host!.id;
+		console.log("Client left", id, consented);
 
 		this.revealIfDone();
 		this.state.players.get(id)!.status = "timeout";
-		console.log("Client left", id, consented);
+		if (this.isEmpty()) return;
+
+		if (this.state.players.get(id)?.status == "czar") this.chooseNewCzar();
+		if (id == this.host?.id) this.host = this.clients[0];
+		this.state.host = this.host!.id;
 	}
 
 	onDispose() {

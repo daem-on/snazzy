@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type { DeckDefinition } from "@/DeckDefinition.ts";
 import Card from "./Card.vue";
 
 defineProps<{
 	list: (number | undefined)[],
-	listName: string,
-	definition: DeckDefinition
+	listName: string
 }>();
 
 </script>
@@ -16,7 +14,7 @@ defineProps<{
 			:class="{ 'draggable-dropzone--occupied': entry !== undefined }">
 
 			<div v-if="entry !== undefined" class="item" :cardId="entry">
-				<Card :id="entry" :definition="definition" type="white" />
+				<Card :id="entry" type="white" />
 			</div>
 
 		</div>
@@ -24,20 +22,6 @@ defineProps<{
 </template>
 
 <style scoped>
-
-.card {
-	width: 120px;
-	height: 160px;
-	background-color: white;
-	border-radius: 10px;
-	margin: 8px;
-	padding: 12px;
-}
-
-.white.card {
-	width: 160px;
-}
-
 .dropzone {
 	width: 160px;
 	height: 200px;
@@ -48,19 +32,17 @@ defineProps<{
 	outline-offset: -12px;
 }
 
-.black {
-	background-color: black;
-	color: white;
-}
-
 .draggable-source--is-dragging .card {
 	color: rgba(0,0,0,0);
 	background: none;
 	outline: white 3px dashed;
 }
 
+.card {
+	transition: transform 0.1s ease-in-out;
+}
+
 .draggable-mirror .card {
-	transition: transform 0.2s;
 	box-shadow: 0px 12px 29px -16px rgba(0,0,0,0.75);
 	transform: scale(1.2);
 }

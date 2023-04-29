@@ -1,12 +1,13 @@
 <script setup lang="ts">
 
-import { computed, onBeforeUnmount, reactive, ref, shallowRef, watch, type Ref } from "vue";
+import { computed, onBeforeUnmount, reactive, ref, shallowRef, watch, type Ref, provide } from "vue";
 import { fetchDeck, type DeckDefinition } from "../../../server/fetchDeck.ts";
 import { Msg, Response } from "../../../server/shared-enums.ts";
 import type { State } from "../../../server/shared-schema";
 import { connect } from "../connect.ts";
 import Card from "./Card.vue";
 import HandView from "./HandView.vue";
+import MobileHandView from "./MobileHandView.vue";
 
 export type CardType = { id: number, text: string };
 
@@ -18,10 +19,12 @@ const cardsInRound = ref(1);
 let myId: Ref<string | undefined> = ref(undefined);
 let updateKey = ref(0);
 
-const iAmCzar = computed(() => {
+provide("deckDefinition", deckDefinition);
+
+const myStatus = computed(() => {
 	updateKey.value; // force update
-	if (stateHolder.value == null || myId.value == undefined) return false;
-	return stateHolder.value.players.get(myId.value)?.status === "czar";
+	if (stateHolder.value == null || myId.value == undefined) return undefined;
+	return stateHolder.value.players.get(myId.value)?.status;
 });
 
 watch(updateKey, () => {
@@ -83,7 +86,7 @@ function playCard(cards: number[]) {
 }
 
 function pickCard(index: number) {
-	if (!iAmCzar.value || !stateHolder.value?.reveal) return;
+	if (myStatus.value !== "czar" || !stateHolder.value?.reveal) return;
 	room.send(Response.pickCard, { cardIndex: index });
 	localWinner.value = index;
 }
@@ -104,14 +107,13 @@ onBeforeUnmount(() => room.leave());
 		</ul>
 
 		<div id="tabletop" class="cardrow" v-if="deckDefinition">
-			<Card v-if="stateHolder?.callId" :id="stateHolder.callId" :definition="deckDefinition" type="black" />
+			<Card v-if="stateHolder?.callId" :id="stateHolder.callId" type="black" />
 			<div v-if="stateHolder?.responses?.length" class="innerrow">
 				<Card
 					v-for="(response, index) in stateHolder?.responses"
 					class="white card"
 					@click="pickCard(index)"
 					:id="stateHolder.callId"
-					:definition="deckDefinition"
 					:winner="response.winner || localWinner === index"
 					:interpolate-ids="response.cardid.toArray()"
 					:hide="stateHolder.reveal == false"
@@ -122,8 +124,7 @@ onBeforeUnmount(() => room.leave());
 
 		<button @click="startGame">Start</button>
 		<div v-if="deckDefinition && stateHolder">
-			<div v-if="iAmCzar">You are the Card Czar.</div>
-			<HandView :cards-in-round="cardsInRound" :czar="iAmCzar" :hand="hand" :hand-size="7" :definition="deckDefinition" @play="playCard"></HandView>
+			<MobileHandView :cards-in-round="cardsInRound" :status="myStatus" :hand="hand" @play="playCard"></MobileHandView>
 		</div>
 	</div>
 </template>
@@ -136,6 +137,10 @@ onBeforeUnmount(() => room.leave());
 	outline: none;
 	flex-wrap: wrap;
 	justify-content: center;
+}
+
+#tabletop {
+	padding: 25px 0;
 }
 
 .cardrow .innerrow {
