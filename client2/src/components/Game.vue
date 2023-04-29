@@ -1,12 +1,12 @@
 <script setup lang="ts">
 
-import { computed, onBeforeUnmount, reactive, ref, shallowRef, type Ref, watch, watchEffect } from "vue";
-import type { State } from "../../../server/shared-schema";
+import { computed, onBeforeUnmount, reactive, ref, shallowRef, watch, type Ref } from "vue";
+import { fetchDeck, type DeckDefinition } from "../../../server/fetchDeck.ts";
 import { Msg, Response } from "../../../server/shared-enums.ts";
+import type { State } from "../../../server/shared-schema";
 import { connect } from "../connect.ts";
-import HandView from "./HandView.vue";
 import Card from "./Card.vue";
-import { fetchDeck, type DeckDefinition } from "../fetchDeck";
+import HandView from "./HandView.vue";
 
 export type CardType = { id: number, text: string };
 
@@ -33,7 +33,7 @@ watch(
 	() => { updateKey.value; return stateHolder.value?.deckUrl; },
 	async (newUrl, oldUrl) => {
 		if (newUrl == undefined) return;
-		deckDefinition.value = await fetchDeck(newUrl);
+		deckDefinition.value = await fetchDeck(newUrl, fetch);
 	}
 );
 
@@ -62,8 +62,8 @@ room.onMessage(Msg.GiveCard,
 	({ hand: id }: { hand: number }) => hand.add(id)
 );
 
-room.onMessage(Msg.Error, ({ message }: { message: string }) => {
-	console.error(message);
+room.onError((code, message) => {
+	console.error(code, message);
 });
 
 function startGame() {

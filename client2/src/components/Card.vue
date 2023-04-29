@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DeckDefinition } from "@/fetchDeck";
+import type { DeckDefinition } from "@/DeckDefinition.ts";
 
 const props = defineProps<{
 	type: "black" | "white" | "played",

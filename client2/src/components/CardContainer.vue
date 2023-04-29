@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { CardType } from "./Game.vue";
+import type { DeckDefinition } from "@/DeckDefinition.ts";
 import Card from "./Card.vue";
-import type { DeckDefinition } from "@/fetchDeck";
 
 defineProps<{
 	list: (number | undefined)[],

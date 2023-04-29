@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@cfworker/json-schema@^1.12.5":
+  version "1.12.5"
+  resolved "https://registry.yarnpkg.com/@cfworker/json-schema/-/json-schema-1.12.5.tgz#8a2b4f335662cbf4fa00d0101cec2a03defbf7d5"
+  integrity sha512-k+ungOs1TxSfNfmfOxkwaiNL2EgRQjhk2SRweMYoKkBJZUYsGsY+XYpe2KpuS9EyjZWjZhq8QvVM+gwi3g1+hQ==
+
 "@colyseus/core@^0.14.20", "@colyseus/core@^0.14.33":
   version "0.14.36"
   resolved "https://registry.npmjs.org/@colyseus/core/-/core-0.14.36.tgz"

@@ -26,6 +26,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "@cfworker/json-schema": "^1.12.5",
     "@colyseus/monitor": "^0.14.22",
     "@colyseus/social": "^0.11.7",
     "colyseus": "^0.14.24",

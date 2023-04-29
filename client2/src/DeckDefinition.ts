@@ -1,0 +1,1 @@
+export type { DeckDefinition } from "../../server/fetchDeck.ts";

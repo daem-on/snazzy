@@ -1,10 +1,9 @@
 <script setup lang="ts">
 
+import type { DeckDefinition } from "@/DeckDefinition.ts";
 import type { DroppableDroppedEvent, DroppableReturnedEvent, DroppableStartEvent, DroppableStopEvent } from "@shopify/draggable";
 import { reactive, ref, watch } from "vue";
-import type { CardType } from "./Game.vue";
 import CardContainer from "./CardContainer.vue";
-import type { DeckDefinition } from "@/fetchDeck";
 
 const props = defineProps<{
 	hand: Set<number>,

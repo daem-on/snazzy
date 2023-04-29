@@ -1,8 +1,10 @@
+import { Validator } from "@cfworker/json-schema";
 import { ArraySchema } from "@colyseus/schema";
 import { Client, Room } from "colyseus";
+import fetch from "node-fetch";
+import { DeckDefinition, deckSchema, fetchDeck } from "./fetchDeck.ts";
 import { Msg, Response } from "./shared-enums.ts";
-import { ResponseCard, PlayerState, State } from "./shared-schema.ts";
-import { fetchDeck } from "./fetchDeck.ts";
+import { PlayerState, ResponseCard, State } from "./shared-schema.ts";
 
 class Deck {
 	calls: number[];
@@ -49,14 +51,13 @@ class Deck {
 export class CardRoom extends Room<State> {
 	deck!: Deck;
 	czar!: number;
-	// workaround for not knowing how many cards are played
-	cardsInRound: Record<string, number> = {};
 	giveCardPending: Client[] = [];
 	host?: Client = undefined;
 	constants!: {
 		dealNumber: number,
 		winLimit: number
 	}
+	_disposed = false;
 	
 	async onCreate(options: any) {
 		console.log("Created", options.title);
@@ -70,16 +71,18 @@ export class CardRoom extends Room<State> {
 			winLimit: options.winLimit || 5
 		};
 
-		const deck = await fetchDeck(options.deck);
-		if (deck == null) {
-			this.disconnect();
-			return;
+		const deck = await fetchDeck(options.deck, fetch);
+		if (deck == null) return this.disconnect();
+		const validator = new Validator(deckSchema);
+		const validation = validator.validate(deck);
+		if (!validation.valid) {
+			console.error("Invalid deck:", options.deck, validation.errors);
+			return this.disconnect();
 		}
 		this.state.deckUrl = options.deck;
 
 		this.deck = new Deck(deck.calls, deck.responses.length);
 		this.state.roundNumber = 0;
-		this.cardsInRound = {};
 
 		this.onMessage(Response.chat, (client, data) => {
 			console.log("Message", client.id, data)
@@ -90,7 +93,7 @@ export class CardRoom extends Room<State> {
 		});
 
 		this.onMessage(Response.playCard, (client, data) => {
-			// see if the player has the card
+			// TODO: see if the player has the card
 
 			if (this.state.players.get(client.id)?.status != "playing") {
 				this.sendError(client, "You have played this turn.")
@@ -106,7 +109,6 @@ export class CardRoom extends Room<State> {
 			this.state.responses.push(c);
 
 			this.giveCardPending.push(client);
-			this.cardsInRound[client.id] = data.cardArray.length;
 			this.state.players.get(client.id)!.status = "played";
 
 			this.broadcast(Msg.Update, null, {afterNextPatch: true});
@@ -177,12 +179,13 @@ export class CardRoom extends Room<State> {
 		});
 	}
 
-	sendError(client: Client, message: string) {
-		client.send(Msg.Error, {message});
+	sendError(client: Client, message: string, code = 4000) {
+		client.error(code, message);
 		console.log("Error", client.id, message);
 	}
 
 	onJoin(client: Client, options: any) {
+		if (this._disposed) return client.leave(1001);
 		console.log("Joined", client.id, options)
 		this.state.players.set(client.id, new PlayerState());
 		if (!this.host) this.host = client;
@@ -262,7 +265,7 @@ export class CardRoom extends Room<State> {
 	givePendingCards() {
 		this.giveCardPending.forEach(client => {
 			if (!client) return;
-			for (var i = 0; i < this.cardsInRound[client.id]; i++) {
+			for (var i = 0; i < this.state.cardsInRound; i++) {
 				this.giveCard(client);
 			}
 		});
@@ -290,6 +293,7 @@ export class CardRoom extends Room<State> {
 	}
 
 	onDispose() {
+		this._disposed = true;
 	}
 
 }
