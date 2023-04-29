@@ -111,7 +111,6 @@ export class CardRoom extends Room<State> {
 			this.giveCardPending.push(client);
 			this.state.players.get(client.id)!.status = "played";
 
-			this.broadcast(Msg.Update, null, {afterNextPatch: true});
 			this.revealIfDone();
 		});
 
@@ -132,11 +131,10 @@ export class CardRoom extends Room<State> {
 			this.state.players.get(picked.playedBy)!.points++;
 
 			this.state.responses.at(data.cardIndex).winner = true;
-			this.broadcast(Msg.Winner, {cardIndex: data.cardIndex });
 			this.state.players.get(client.id)!.status = "played";
 
 			if (this.state.players.get(picked.playedBy)!.points > this.constants.winLimit) {
-				this.broadcast(Msg.Over, {winner: picked.playedBy });
+				this.broadcast(Msg.Over, {winner: picked.playedBy});
 				return this.disconnect();
 			}
 
@@ -242,13 +240,11 @@ export class CardRoom extends Room<State> {
 		if (this.deck.playing.calls.length < 3) this.deck.reshuffleCalls();
 		this.state.callId = this.deck.playing.calls.pop()!;
 		this.state.cardsInRound = this.deck.callLengths[this.state.callId]-1;
-		this.broadcast(Msg.Update, null, {afterNextPatch: true});
 	}
 
 	chooseNewCzar() {
 		this.czar++;
 		if (this.czar > this.clients.length-1) this.czar = 0;
-		this.clients[this.czar].send(Msg.Czar, null);
 		this.state.players.get(this.clients[this.czar].id)!.status = "czar";
 	}
 
@@ -259,7 +255,6 @@ export class CardRoom extends Room<State> {
 		Deck.shuffle(this.state.responses);
 
 		this.state.reveal = true;
-		this.broadcast(Msg.Reveal, null, {afterNextPatch: true});
 	}
 
 	givePendingCards() {

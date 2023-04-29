@@ -1,15 +1,10 @@
 export enum Msg {
 	Deal,
-	Update,
 	DealPatch,
 	GiveCard,
-	Czar,
 	NewRound,
-	Reveal,
-	Winner,
 	Over,
 	Restart,
-	Error,
 	Chat
 }
 

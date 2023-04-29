@@ -62,6 +62,13 @@ room.onMessage(Msg.GiveCard,
 	({ hand: id }: { hand: number }) => hand.add(id)
 );
 
+room.onMessage(Msg.Over, ({winner}: {winner: string}) => {
+	const name = (winner === myId.value)
+		? "You"
+		: stateHolder.value?.players.get(winner)?.name;
+	alert(`Game over! ${name} won!`);
+});
+
 room.onError((code, message) => {
 	console.error(code, message);
 });
@@ -76,7 +83,7 @@ function playCard(cards: number[]) {
 }
 
 function pickCard(index: number) {
-	if (!iAmCzar.value) return;
+	if (!iAmCzar.value || !stateHolder.value?.reveal) return;
 	room.send(Response.pickCard, { cardIndex: index });
 	localWinner.value = index;
 }
