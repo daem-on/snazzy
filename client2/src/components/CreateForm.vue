@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
+import Button from './Button.vue';
 
 const emit = defineEmits<{
 	(e: "create", options: CreateRoomOptions): void
@@ -37,12 +38,24 @@ function create() {
 
 <template>
 	<div class="room-options">
-		<input type="text" v-model="options.title" placeholder="Title" />
-		<input type="text" v-model="options.deck" placeholder="Deck URL" />
-		<input type="number" v-model.number="options.dealNumber" placeholder="Deal Number" />
-		<input type="number" v-model.number="options.winLimit" placeholder="Win Limit" />
+		<label>
+			Title
+			<input type="text" v-model="options.title" />
+		</label>
+		<label>
+			Deck URL
+			<input type="text" v-model="options.deck" />
+		</label>
+		<label>
+			Deal Number
+			<input type="number" v-model.number="options.dealNumber" />
+		</label>
+		<label>
+			Win Limit
+			<input type="number" v-model.number="options.winLimit" />
+		</label>
 	</div>
-	<button icon="login" @click="create">Create</button>
+	<Button icon="login" black @click="create">Create</Button>
 </template>
 
 <style scoped>
@@ -50,4 +63,17 @@ function create() {
 	display: flex;
 	flex-direction: column;
 }
+
+.room-options input {
+	margin: 0.5rem 0;
+	padding: 0.5rem;
+	border-radius: 0.5rem;
+	border: 1px solid #ccc;
+}
+
+.room-options label {
+	display: flex;
+	flex-direction: column;
+}
+
 </style>

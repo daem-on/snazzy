@@ -34,8 +34,8 @@ function playCards() {
 
 <template>
 	<div class="buttons row">
-		<Button icon="front_hand" @click="playCards">Play card</Button>
-		<Button icon="undo" @click="picked.length = 0">Clear picked</Button>
+		<Button icon="front_hand" @click="playCards" :disabled="picked.length !== props.cardsInRound">Play card</Button>
+		<Button icon="undo" @click="picked.length = 0" :disabled="picked.length === 0">Clear picked</Button>
 	</div>
 	<div class="hand row">
 		<Card
@@ -47,8 +47,14 @@ function playCards() {
 			@click="pick(card)"
 		/>
 		<div v-if="cantPlay" class="blocker">
-			<template v-if="status === 'czar'">You are the Card Czar.</template>
-			<template v-if="status === 'played'">You have played this turn.</template>
+			<template v-if="status === 'czar'">
+				<div><span class="material-icons">event_seat</span></div>
+				You are the Card Czar.
+			</template>
+			<template v-if="status === 'played'">
+				<div><span class="material-icons">done_all</span></div>
+				You have played this turn.
+			</template>
 		</div>
 	</div>
 </template>

@@ -2,12 +2,13 @@
 
 defineProps<{
 	icon: string,
+	black?: true
 }>();
 
 </script>
 
 <template>
-	<button>
+	<button :class="{ black: black }">
 		<span class="material-icons">{{ icon }}</span>
 		<slot></slot>
 	</button>
@@ -37,5 +38,21 @@ button:hover {
 button:active {
 	/* background: rgba(150, 78, 44, 0.6); */
 	outline: 2px solid white;
+}
+
+button:disabled {
+	background: repeating-linear-gradient(
+		45deg, transparent, transparent 10px,
+		#ffffff50 10px, #ffffff50 20px
+	);
+	outline: 1px solid white;
+}
+
+.black {
+	background: rgba(0, 0, 0);
+}
+
+.black:hover {
+	background: rgb(70, 70, 70);
 }
 </style>

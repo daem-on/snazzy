@@ -3,6 +3,7 @@ import type { State } from "../../server/shared-schema.ts";
 
 const url = new URL(window.location.href);
 url.port = "2567";
+url.search = "";
 url.protocol = url.protocol.replace("http", "ws");
 url.hash = "";
 

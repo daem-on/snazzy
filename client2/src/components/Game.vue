@@ -115,6 +115,7 @@ onBeforeUnmount(() => room.leave());
 					<ul>
 						<li v-for="[id, player] in stateHolder?.players">
 							{{ player.name }} ({{ id }})
+							<span v-if="player.status === 'timeout'">t/o</span>
 						</li>
 					</ul>
 				</div>
