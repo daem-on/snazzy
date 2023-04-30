@@ -2,10 +2,11 @@
 import { computed, reactive } from 'vue';
 import Card from './Card.vue';
 import Button from './Button.vue';
+import { PlayerStatus } from '../../../server/shared-schema';
 
 const props = defineProps<{
 	hand: Set<number>,
-	status?: string,
+	status?: PlayerStatus,
 	cardsInRound: number
 }>();
 
@@ -15,10 +16,10 @@ const emit = defineEmits<{
 
 const picked: number[] = reactive([]);
 
-const cantPlay = computed(() => props.status !== "playing");
+const cantPlay = computed(() => props.status !== PlayerStatus.Playing);
 
 function pick(card: number) {
-	if (props.status !== "playing") return;
+	if (props.status !== PlayerStatus.Playing) return;
 	if (picked.includes(card)) picked.splice(picked.indexOf(card), 1);
 	else if (picked.length >= props.cardsInRound) return;
 	else picked.push(card);
@@ -47,11 +48,11 @@ function playCards() {
 			@click="pick(card)"
 		/>
 		<div v-if="cantPlay" class="blocker">
-			<template v-if="status === 'czar'">
+			<template v-if="status === PlayerStatus.Czar">
 				<div><span class="material-icons">event_seat</span></div>
 				You are the Card Czar.
 			</template>
-			<template v-if="status === 'played'">
+			<template v-if="status === PlayerStatus.Played">
 				<div><span class="material-icons">done_all</span></div>
 				You have played this turn.
 			</template>

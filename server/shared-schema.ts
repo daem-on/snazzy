@@ -6,10 +6,14 @@ export class ResponseCard extends Schema {
 	@type("boolean") winner = false;
 }
 
+export enum PlayerStatus {
+	Playing, Played, Czar, Timeout
+}
+
 export class PlayerState extends Schema {
 	@type("number") points = 0;
 	@type("string") name!: string;
-	@type("string") status!: string;
+	@type("uint8") status!: PlayerStatus;
 }
 
 export class State extends Schema {

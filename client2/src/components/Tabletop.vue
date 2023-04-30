@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import type { State } from "../../../server/shared-schema";
+import { PlayerStatus, type State } from "../../../server/shared-schema";
 import Card from "./Card.vue";
 
 const props = defineProps<{
 	stateHolder: State;
 	updateKey: number;
-	myStatus?: string;
+	myStatus?: PlayerStatus;
 }>();
 
 const emit = defineEmits<{
@@ -20,7 +20,7 @@ watch(ref(props.updateKey), () => {
 });
 
 function pickCard(index: number) {
-	if (props.myStatus !== "czar" || !props.stateHolder.reveal) return;
+	if (props.myStatus !== PlayerStatus.Czar || !props.stateHolder.reveal) return;
 	emit("pickCard", index);
 	localWinner.value = index;
 }

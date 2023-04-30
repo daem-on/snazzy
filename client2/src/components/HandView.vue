@@ -4,10 +4,11 @@ import type { DroppableDroppedEvent, DroppableReturnedEvent, DroppableStartEvent
 import { reactive, ref, watch } from "vue";
 import CardContainer from "./CardContainer.vue";
 import Button from "./Button.vue";
+import { PlayerStatus } from "../../../server/shared-schema";
 
 const props = defineProps<{
 	hand: Set<number>,
-	status?: string,
+	status?: PlayerStatus,
 	cardsInRound: number
 }>();
 
@@ -32,7 +33,7 @@ let dragging: DroppableStartEvent | undefined = undefined;
 let currentTarget: DroppableDroppedEvent | undefined = undefined;
 
 function start(e: DroppableStartEvent) {
-	if (props.status === "czar") return e.cancel();
+	if (props.status === PlayerStatus.Czar) return e.cancel();
 	dragging = e;
 }
 function dropped(e: DroppableDroppedEvent) { currentTarget = e; }
@@ -120,13 +121,13 @@ function playPicked() {
 </script>
 
 <template>
-	<div class="cant-play" v-if="status !== 'playing'">
+	<div class="cant-play" v-if="status !== PlayerStatus.Playing">
 		<p>
-			<template v-if="status === 'czar'">
+			<template v-if="status === PlayerStatus.Czar">
 				<div><span class="material-icons">event_seat</span></div>
 				You are the Card Czar.
 			</template>
-			<template v-if="status === 'played'">
+			<template v-if="status === PlayerStatus.Played">
 				<div><span class="material-icons">done_all</span></div>
 				You have played this turn.
 			</template>

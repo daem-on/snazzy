@@ -4,20 +4,20 @@ import { Client, Room } from "colyseus";
 import fetch from "node-fetch";
 import { DeckDefinition, deckSchema, fetchDeck } from "./fetchDeck.ts";
 import { Msg, Response } from "./shared-enums.ts";
-import { PlayerState, ResponseCard, State } from "./shared-schema.ts";
+import { PlayerState, PlayerStatus, ResponseCard, State } from "./shared-schema.ts";
 
 class Deck {
-	calls: number[];
+	calls: number;
+	responses: number;
 	callLengths: number[];
-	responses: number[];
 	playing: {
 		calls: number[],
 		responses: number[]
 	};
 	
 	constructor (calls: string[][], responses: number) {
-		this.calls = Array.from({length: calls.length}, (_, i) => i);
-		this.responses = Array.from({length: responses}, (_, i) => i);
+		this.calls = calls.length;
+		this.responses = responses;
 		this.playing = {calls: [], responses: []};
 		this.callLengths = Array.from(
 			{length: calls.length}, (_, i) => calls[i].length
@@ -38,12 +38,12 @@ class Deck {
 	}
 	
 	reshuffleCalls() {
-		var c = this.calls.slice(0, this.calls.length);
+		var c = Array.from({length: this.calls}, (_, i) => i);
 		this.playing.calls = Deck.shuffle(c);
 	}
 	
 	reshuffleResponses() {
-		var r = this.responses.slice(0, this.responses.length);
+		var r = Array.from({length: this.responses}, (_, i) => i);
 		this.playing.responses = Deck.shuffle(r);
 	}
 }
@@ -96,7 +96,7 @@ export class CardRoom extends Room<State> {
 		this.onMessage(Response.playCard, (client, data) => {
 			// TODO: see if the player has the card
 
-			if (this.state.players.get(client.id)?.status != "playing") {
+			if (this.state.players.get(client.id)?.status != PlayerStatus.Playing) {
 				this.sendError(client, "You have played this turn.")
 				return;
 			}
@@ -110,13 +110,13 @@ export class CardRoom extends Room<State> {
 			this.state.responses.push(c);
 
 			this.giveCardPending.push(client);
-			this.state.players.get(client.id)!.status = "played";
+			this.state.players.get(client.id)!.status = PlayerStatus.Played;
 
 			this.revealIfDone();
 		});
 
 		this.onMessage(Response.pickCard, (client, data) => {
-			if (this.state.players.get(client.id)?.status != "czar") {
+			if (this.state.players.get(client.id)?.status != PlayerStatus.Czar) {
 				this.sendError(client, "You're not the Czar.")
 				return;
 			} if (!this.state.reveal) {
@@ -132,7 +132,7 @@ export class CardRoom extends Room<State> {
 			this.state.players.get(picked.playedBy)!.points++;
 
 			this.state.responses.at(data.cardIndex).winner = true;
-			this.state.players.get(client.id)!.status = "played";
+			this.state.players.get(client.id)!.status = PlayerStatus.Played;
 
 			if (this.state.players.get(picked.playedBy)!.points > this.constants.winLimit) {
 				this.broadcast(Msg.Over, {winner: picked.playedBy});
@@ -161,7 +161,7 @@ export class CardRoom extends Room<State> {
 		this.onMessage(Response.reconnect, (client, data) => {
 			const oldPlayer = this.state.players.get(data.text);
 			const player = this.state.players.get(client.id)!;
-			if (oldPlayer?.status == "timeout") {
+			if (oldPlayer?.status == PlayerStatus.Timeout) {
 				player.points = oldPlayer.points;
 				player.name = oldPlayer.name;
 			}
@@ -216,7 +216,7 @@ export class CardRoom extends Room<State> {
 			hand.push(this.deck.playing.responses.pop()!);
 		}
 		client.send(Msg.DealPatch, {hand: hand})
-		this.state.players.get(client.id)!.status = "playing";
+		this.state.players.get(client.id)!.status = PlayerStatus.Playing;
 	}
 
 	giveCard(client: Client) {
@@ -228,7 +228,7 @@ export class CardRoom extends Room<State> {
 
 	startRound() {
 		this.clients.forEach(client => {
-			this.state.players.get(client.id)!.status = "playing";
+			this.state.players.get(client.id)!.status = PlayerStatus.Playing;
 		});
 		this.state.responses = new ArraySchema<ResponseCard>();
 		this.state.reveal = false;
@@ -246,19 +246,19 @@ export class CardRoom extends Room<State> {
 
 	ensureCzar() {
 		if (this.state.roundNumber <= 0) return;
-		if ([...this.state.players.values()].some(player => player.status == "czar")) return;
+		if ([...this.state.players.values()].some(player => player.status == PlayerStatus.Czar)) return;
 		this.chooseNewCzar();
 	}
 
 	chooseNewCzar() {
 		this.czar++;
 		if (this.czar > this.clients.length-1) this.czar = 0;
-		this.state.players.get(this.clients[this.czar].id)!.status = "czar";
+		this.state.players.get(this.clients[this.czar].id)!.status = PlayerStatus.Czar;
 	}
 
 	revealIfDone() {
 		// check if we're done
-		if ([...this.state.players.values()].some(player => player.status == "playing")) return;
+		if ([...this.state.players.values()].some(player => player.status == PlayerStatus.Playing)) return;
 
 		Deck.shuffle(this.state.responses);
 
@@ -281,7 +281,7 @@ export class CardRoom extends Room<State> {
 
 	isEmpty() {
 		return (this.clients.length == 0)
-			|| (this.clients.every(client => this.state.players.get(client.id)?.status == "timeout"));
+			|| (this.clients.every(client => this.state.players.get(client.id)?.status == PlayerStatus.Timeout));
 	}
 
 	async onLeave(client: Client, consented: boolean) {
@@ -289,10 +289,10 @@ export class CardRoom extends Room<State> {
 		console.log("Client left", id, consented);
 
 		this.revealIfDone();
-		this.state.players.get(id)!.status = "timeout";
+		this.state.players.get(id)!.status = PlayerStatus.Timeout;
 		if (this.isEmpty()) return;
 
-		if (this.state.players.get(id)?.status == "czar") this.chooseNewCzar();
+		if (this.state.players.get(id)?.status == PlayerStatus.Czar) this.chooseNewCzar();
 		if (id == this.host?.id) this.host = this.clients[0];
 		this.state.host = this.host!.id;
 	}

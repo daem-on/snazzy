@@ -4,7 +4,7 @@ import type { Room } from "colyseus.js";
 import { computed, onBeforeUnmount, provide, reactive, ref, shallowRef, watch, type Ref } from "vue";
 import { fetchDeck, type DeckDefinition } from "../../../server/fetchDeck.ts";
 import { Msg, Response } from "../../../server/shared-enums.ts";
-import type { State } from "../../../server/shared-schema";
+import { PlayerStatus, type State } from "../../../server/shared-schema";
 import Button from "./Button.vue";
 import HandView from "./HandView.vue";
 import PlayerList from "./PlayerList.vue";
@@ -115,7 +115,7 @@ onBeforeUnmount(() => room.leave());
 					<ul>
 						<li v-for="[id, player] in stateHolder?.players">
 							{{ player.name }} ({{ id }})
-							<span v-if="player.status === 'timeout'">t/o</span>
+							<span v-if="player.status === PlayerStatus.Timeout">t/o</span>
 						</li>
 					</ul>
 				</div>

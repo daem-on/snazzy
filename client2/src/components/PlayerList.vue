@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { State } from '../../../server/shared-schema';
+import { PlayerStatus, type State } from '../../../server/shared-schema';
 
 const props = defineProps<{
 	stateHolder: State;
@@ -10,14 +10,14 @@ const props = defineProps<{
 const displayed = computed(() => {
 	props.updateKey; // force reactivity
 	const all = props.stateHolder.players.entries();
-	return Array.from(all).filter(e => e[1].status !== 'timeout');
+	return Array.from(all).filter(e => e[1].status !== PlayerStatus.Timeout);
 });
 
-const statusIcons: Record<string, string> = {
-	"playing": "sms",
-	"played": "check",
-	"timeout": "signal_wifi_bad",
-	"czar": "event_seat"
+const statusIcons: Record<PlayerStatus, string> = {
+	[PlayerStatus.Playing]: "sms",
+	[PlayerStatus.Played]: "check",
+	[PlayerStatus.Timeout]: "signal_wifi_bad",
+	[PlayerStatus.Czar]: "event_seat"
 };
 
 </script>
