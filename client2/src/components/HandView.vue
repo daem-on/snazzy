@@ -6,7 +6,7 @@ import CardContainer from "./CardContainer.vue";
 
 const props = defineProps<{
 	hand: Set<number>,
-	czar: boolean,
+	status?: string,
 	cardsInRound: number
 }>();
 
@@ -31,7 +31,7 @@ let dragging: DroppableStartEvent | undefined = undefined;
 let currentTarget: DroppableDroppedEvent | undefined = undefined;
 
 function start(e: DroppableStartEvent) {
-	if (props.czar) return e.cancel();
+	if (props.status === "czar") return e.cancel();
 	dragging = e;
 }
 function dropped(e: DroppableDroppedEvent) { currentTarget = e; }
@@ -71,8 +71,8 @@ function returnToHand() {
 		if (card == undefined) continue;
 		const index = hand.findIndex(x => x == undefined);
 		if (index == -1) {
-			console.error("Hand is full");
-			return;
+			hand.push(card);
+			continue;
 		}
 		hand.splice(index, 1, card);
 		picked.splice(i, 1, undefined);
@@ -85,8 +85,8 @@ watch(props.hand, (newHand, oldHand) => {
 	for (const card of added) {
 		const index = hand.findIndex(x => x == undefined);
 		if (index == -1) {
-			console.error("Hand is full");
-			return;
+			hand.push(card);
+			continue;
 		}
 		hand.splice(index, 1, card);
 	}

@@ -53,6 +53,14 @@ function getText() {
 	border-radius: 10px;
 	margin: 8px;
 	padding: 12px;
+	overflow-wrap: break-word;
+	/* hyphens: auto; */
+	overflow-y: hidden;
+	white-space: pre-line;
+}
+
+.card p {
+	margin: 4px 0;
 }
 
 .black {
@@ -66,22 +74,10 @@ function getText() {
 
 .card.winner {
 	border: rgb(0, 140, 255) 3px solid;
-	transition: transform 0.2s;
-	box-shadow: 0px 12px 29px -16px rgba(0, 0, 0, 0.75);
+	transition: transform 0.1s;
+	box-shadow: 0px 10px 20px -12px rgba(0, 0, 0, 0.75);
 	transform: scale(1.2);
 	z-index: 3;
 }
 
-a.card {
-	background: none;
-	text-align: center;
-	color: white;
-}
-
-a.card p {
-	font-weight: bold;
-	border: white 3px solid;
-	border-radius: 10px;
-	padding: 30px 0;
-}
 </style>

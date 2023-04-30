@@ -226,8 +226,8 @@ export class CardRoom extends Room<State> {
 	}
 
 	startRound() {
-		this.state.players.forEach(player => {
-			player.status = "playing";
+		this.clients.forEach(client => {
+			this.state.players.get(client.id)!.status = "playing";
 		});
 		this.state.responses = new ArraySchema<ResponseCard>();
 		this.state.reveal = false;

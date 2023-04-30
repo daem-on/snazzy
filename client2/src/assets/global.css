@@ -7,6 +7,10 @@ html {
 	font-family: Lato, Helvetica, sans-serif;
 }
 
+body {
+	margin: 0;
+}
+
 @media screen and (max-height: 600px) {
 	html {
 		overflow-y: auto;

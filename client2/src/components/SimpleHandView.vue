@@ -4,7 +4,7 @@ import Card from './Card.vue';
 
 const props = defineProps<{
 	hand: Set<number>,
-	status: string | undefined,
+	status?: string,
 	cardsInRound: number
 }>();
 
@@ -14,7 +14,7 @@ const emit = defineEmits<{
 
 const picked: number[] = reactive([]);
 
-const iAmCzar = computed(() => props.status === "czar");
+const cantPlay = computed(() => props.status !== "playing");
 
 function pick(card: number) {
 	if (props.status !== "playing") return;
@@ -24,6 +24,7 @@ function pick(card: number) {
 }
 
 function playCards() {
+	if (picked.length !== props.cardsInRound) return;
 	emit("play", [...picked]);
 	picked.length = 0;
 }
@@ -31,18 +32,29 @@ function playCards() {
 </script>
 
 <template>
-	<button @click="playCards">Play cards</button>
-	<button @click="picked.length = 0">Clear picked</button>
+	<div class="buttons">
+		<button @click="playCards">
+			<span class="material-icons">front_hand</span>
+			Play card
+		</button>
+		<button @click="picked.length = 0">
+			<span class="material-icons">undo</span>
+			Clear picked
+		</button>
+	</div>
 	<div class="row">
 		<Card
 			v-for="card in hand"
 			:key="card"
 			:id="card"
-			:class="{picked: picked.includes(card), disabled: iAmCzar}"
+			:class="{picked: picked.includes(card), disabled: cantPlay}"
 			type="white"
 			@click="pick(card)"
 		/>
-		<div v-if="iAmCzar" class="blocker">You are the Card Czar.</div>
+		<div v-if="cantPlay" class="blocker">
+			<template v-if="status === 'czar'">You are the Card Czar.</template>
+			<template v-if="status === 'played'">You have played this turn.</template>
+		</div>
 	</div>
 </template>
 
@@ -76,12 +88,30 @@ function playCards() {
 
 .blocker {
 	position: absolute;
-	width: 95%;
+	width: 100%;
 	box-sizing: border-box;
 	background-color: white;
 	text-align: center;
 	font-size: 1.5em;
 	padding: 20px;
 	border-radius: 10px;
+}
+
+button {
+	background: white;
+	text-align: center;
+	font-weight: bold;
+	border: white 3px solid;
+	border-radius: 10px;
+	padding: 10px 16px;
+}
+
+.buttons {
+	display: flex;
+	flex-direction: row;
+	justify-content: start;
+	align-items: center;
+	gap: 10px;
+	margin: 10px;
 }
 </style>
