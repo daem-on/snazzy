@@ -292,7 +292,7 @@ export class CardRoom extends Room<State> {
 		this.state.players.get(id)!.status = PlayerStatus.Timeout;
 		if (this.isEmpty()) return;
 
-		if (this.state.players.get(id)?.status == PlayerStatus.Czar) this.chooseNewCzar();
+		this.ensureCzar();
 		if (id == this.host?.id) this.host = this.clients[0];
 		this.state.host = this.host!.id;
 	}

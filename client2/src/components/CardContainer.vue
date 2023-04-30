@@ -47,6 +47,10 @@ defineProps<{
 	transform: scale(1.2);
 }
 
+.draggable-mirror {
+	z-index: 2;
+}
+
 .cardrow {
 	display: flex;
 	flex-direction: row;
