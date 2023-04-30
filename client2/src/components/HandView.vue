@@ -3,6 +3,7 @@
 import type { DroppableDroppedEvent, DroppableReturnedEvent, DroppableStartEvent, DroppableStopEvent } from "@shopify/draggable";
 import { reactive, ref, watch } from "vue";
 import CardContainer from "./CardContainer.vue";
+import Button from "./Button.vue";
 
 const props = defineProps<{
 	hand: Set<number>,
@@ -119,11 +120,64 @@ function playPicked() {
 </script>
 
 <template>
-	<vue-droppable :options="options" @droppable:start="start" @droppable:dropped="dropped" @droppable:returned="returned" @droppable:stop="stop">
-		<CardContainer :list="picked" listName="picked"></CardContainer>
-		<button @click="playPicked">Play card</button>
-		<hr />
-		<CardContainer :list="hand" listName="hand"></CardContainer>
-	</vue-droppable>
+	<div class="cant-play" v-if="status !== 'playing'">
+		<p>
+			<template v-if="status === 'czar'">
+				<div><span class="material-icons">event_seat</span></div>
+				You are the Card Czar.
+			</template>
+			<template v-if="status === 'played'">
+				<div><span class="material-icons">done_all</span></div>
+				You have played this turn.
+			</template>
+		</p>
+	</div>
+	<template v-else>
+		<vue-droppable :options="options" @droppable:start="start" @droppable:dropped="dropped" @droppable:returned="returned" @droppable:stop="stop">
+			<div class="top">
+				<div class="buttons">
+					<Button icon="front_hand" @click="playPicked">Play card</Button>
+					<Button icon="undo" @click="returnToHand">Clear picked</Button>
+				</div>
+				<CardContainer class="contents" :list="picked" listName="picked"></CardContainer>
+			</div>
+			<CardContainer :list="hand" listName="hand"></CardContainer>
+		</vue-droppable>
+	</template>
 </template>
 
+<style scoped>
+.top {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+
+	gap: 10px
+}
+
+.top > * {
+	flex-shrink: 0;
+}
+
+.buttons {
+	display: flex;
+	flex-direction: column;
+	align-items: end;
+	justify-content: center;
+	gap: 10px;
+}
+
+.contents {
+	display: contents;
+}
+
+.cant-play {
+	background: white;
+	padding: 10px;
+	border-radius: 10px;
+	text-align: center;
+	margin: 16px;
+}
+</style>

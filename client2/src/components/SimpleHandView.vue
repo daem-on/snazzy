@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
 import Card from './Card.vue';
+import Button from './Button.vue';
 
 const props = defineProps<{
 	hand: Set<number>,
@@ -32,17 +33,11 @@ function playCards() {
 </script>
 
 <template>
-	<div class="buttons">
-		<button @click="playCards">
-			<span class="material-icons">front_hand</span>
-			Play card
-		</button>
-		<button @click="picked.length = 0">
-			<span class="material-icons">undo</span>
-			Clear picked
-		</button>
+	<div class="buttons row">
+		<Button icon="front_hand" @click="playCards">Play card</Button>
+		<Button icon="undo" @click="picked.length = 0">Clear picked</Button>
 	</div>
-	<div class="row">
+	<div class="hand row">
 		<Card
 			v-for="card in hand"
 			:key="card"
@@ -64,12 +59,15 @@ function playCards() {
 	flex-direction: row;
 	justify-content: start;
 	align-items: center;
+}
+
+.hand {
 	width: 100%;
 	overflow-x: auto;
 	padding-top: 25px;
 }
 
-.row div {
+.row .card {
 	flex-shrink: 0;
 }
 
@@ -97,20 +95,7 @@ function playCards() {
 	border-radius: 10px;
 }
 
-button {
-	background: white;
-	text-align: center;
-	font-weight: bold;
-	border: white 3px solid;
-	border-radius: 10px;
-	padding: 10px 16px;
-}
-
 .buttons {
-	display: flex;
-	flex-direction: row;
-	justify-content: start;
-	align-items: center;
 	gap: 10px;
 	margin: 10px;
 }

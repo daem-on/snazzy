@@ -62,6 +62,7 @@ export class CardRoom extends Room<State> {
 	async onCreate(options: any) {
 		console.log("Created", options.title);
 		console.log("Options:", options);
+		this.setMetadata(options);
 
 		this.setState(new State());
 		this.setPatchRate(100);
