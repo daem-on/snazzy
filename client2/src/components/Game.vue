@@ -34,6 +34,11 @@ const myStatus = computed(() => {
 	return stateHolder.value.players.get(myId.value)?.status;
 });
 
+const started = computed(() => {
+	updateKey.value; // force update
+	return (stateHolder.value?.roundNumber ?? 0) <= 0;
+})
+
 watch(
 	() => { updateKey.value; return stateHolder.value?.deckUrl; },
 	async (newUrl, oldUrl) => {
@@ -106,39 +111,37 @@ onBeforeUnmount(() => room.leave());
 </script>
 
 <template>
-	<div :key="updateKey">
-		<template v-if="(stateHolder?.roundNumber ?? 0) <= 0">
-			<div class="column">
-				<div class="waiting">
-					<h2>Snazzy.</h2>
-					<p>The game has not started yet.</p>
-					<ul>
-						<li v-for="[id, player] in stateHolder?.players">
-							{{ player.name }} ({{ id }})
-							<span v-if="player.status === PlayerStatus.Timeout">t/o</span>
-						</li>
-					</ul>
-				</div>
-				<Button icon="play_circle" @click="startGame" v-if="stateHolder?.host === myId">Start</Button>
+	<template v-if="started">
+		<div class="column">
+			<div class="waiting">
+				<h2>Snazzy.</h2>
+				<p>The game has not started yet.</p>
+				<ul>
+					<li v-for="[id, player] in stateHolder?.players">
+						{{ player.name }} ({{ id }})
+						<span v-if="player.status === PlayerStatus.Timeout">t/o</span>
+					</li>
+				</ul>
 			</div>
-		</template>
-		<template v-else>
-			<div class="margin-10">
-				<PlayerList v-if="stateHolder != null" :state-holder="stateHolder" :update-key="updateKey" />
-			</div>
-	
-			<div v-if="deckDefinition && stateHolder" class="center">
-				<Tabletop :my-status="myStatus" :update-key="updateKey" :state-holder="stateHolder" @pick-card="pickCard" />
-			</div>
-			<div v-if="deckDefinition && stateHolder">
-				<SimpleHandView v-if="useSimpleView" :cards-in-round="cardsInRound" :status="myStatus" :hand="hand" @play="playCard"></SimpleHandView>
-				<HandView v-else :cards-in-round="cardsInRound" :status="myStatus" :hand="hand" @play="playCard"></HandView>
-			</div>
-			<div class="center margin-10">
-				<Button icon="autorenew" @click="useSimpleView = !useSimpleView">Switch view</Button>
-			</div>
-		</template>
-	</div>
+			<Button icon="play_circle" @click="startGame" v-if="stateHolder?.host === myId">Start</Button>
+		</div>
+	</template>
+	<template v-else>
+		<div class="margin-10">
+			<PlayerList v-if="stateHolder != null" :state-holder="stateHolder" :update-key="updateKey" />
+		</div>
+
+		<div v-if="deckDefinition && stateHolder" class="center">
+			<Tabletop :my-status="myStatus" :update-key="updateKey" :state-holder="stateHolder" @pick-card="pickCard" />
+		</div>
+		<div v-if="deckDefinition">
+			<SimpleHandView v-if="useSimpleView" :cards-in-round="cardsInRound" :status="myStatus" :hand="hand" @play="playCard"></SimpleHandView>
+			<HandView v-else :cards-in-round="cardsInRound" :status="myStatus" :hand="hand" @play="playCard"></HandView>
+		</div>
+		<div class="center margin-10">
+			<Button icon="autorenew" @click="useSimpleView = !useSimpleView">Switch view</Button>
+		</div>
+	</template>
 </template>
 
 <style scoped>

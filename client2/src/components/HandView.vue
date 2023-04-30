@@ -81,36 +81,32 @@ function returnToHand() {
 	}
 }
 
-watch(props.hand, (newHand, oldHand) => {
-	const added = [...newHand].filter(x => !oldHand.has(x));
-	const removed = [...oldHand].filter(x => !newHand.has(x));
-	for (const card of added) {
-		const index = hand.findIndex(x => x == undefined);
-		if (index == -1) {
-			hand.push(card);
-			continue;
-		}
-		hand.splice(index, 1, card);
+function addToHand(card: number) {
+	const index = hand.findIndex(x => x == undefined);
+	if (index == -1) {
+		hand.push(card);
+		return;
 	}
-	for (const card of removed) {
-		const index = hand.findIndex(x => x == card);
-		if (index == -1) {
-			console.error("Card not found in hand");
-			return;
-		}
-		hand.splice(index, 1, undefined);
+	hand.splice(index, 1, card);
+}
+
+watch(props.hand, newHand => {
+	newHand.forEach(card => { if (!hand.includes(card)) addToHand(card) });
+	for (let i = 0; i < hand.length; i++) {
+		if (hand[i] == undefined) continue;
+		if (!newHand.has(hand[i]!)) hand.splice(i, 1, undefined);
 	}
 });
 
-watch(ref(props.cardsInRound), (newValue, oldValue) => {
+watch(() => props.cardsInRound, (newValue, oldValue) => {
 	returnToHand();
-	console.log("Cards in round changed", oldValue, newValue);
 	picked.length = newValue;
 	for (let i = 0; i < picked.length; i++) picked[i] = undefined;
 });
 
 function playPicked() {
 	const cards = picked.filter(x => x != undefined) as number[];
+	if (cards.length !== props.cardsInRound) return;
 	emit("play", cards);
 	for (let i = 0; i < cards.length; i++) {
 		const index = picked.findIndex(x => x == cards[i]);

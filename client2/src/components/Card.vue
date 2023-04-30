@@ -38,7 +38,7 @@ function getText() {
 </script>
 
 <template>
-	<div class="card" :class="{ white: type === 'played', black: type === 'black', winner }">
+	<div class="card" :class="{ white: type === 'played', black: type === 'black', winner, hide }">
 		<p>
 			{{ getText() }}
 		</p>
@@ -57,6 +57,9 @@ function getText() {
 	/* hyphens: auto; */
 	overflow-y: hidden;
 	white-space: pre-line;
+
+	transform: rotateY(0deg);
+	transition: transform 0.2s ease-in-out;
 }
 
 .card p {
@@ -78,6 +81,10 @@ function getText() {
 	box-shadow: 0px 10px 20px -12px rgba(0, 0, 0, 0.75);
 	transform: scale(1.2);
 	z-index: 3;
+}
+
+.hide {
+	transform: rotateY(180deg);
 }
 
 </style>
