@@ -1,1 +1,1 @@
-export type { DeckDefinition } from "../../server/fetchDeck.ts";
+export type { DeckDefinition } from "../../server/fetchDeck";

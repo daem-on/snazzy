@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DeckDefinition } from "@/DeckDefinition.ts";
+import type { DeckDefinition } from "@/DeckDefinition";
 import { inject, type Ref } from "vue";
 
 const props = defineProps<{

@@ -6,7 +6,7 @@ import Button from "./components/Button.vue";
 import type { CreateRoomOptions } from "./components/CreateForm.vue";
 import CreateForm from "./components/CreateForm.vue";
 import Game from "./components/Game.vue";
-import { checkRoomExists, create, join } from "./connect.ts";
+import { checkRoomExists, create, join } from "./connect";
 
 const room = shallowRef<Room<State> | null>(null);
 const exists = ref<boolean | undefined>(undefined);

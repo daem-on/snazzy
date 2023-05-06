@@ -1,5 +1,5 @@
 import { Client } from "colyseus.js";
-import type { State } from "../../server/shared-schema.ts";
+import type { State } from "../../server/shared-schema";
 
 function getServerUrl() {
 	const localOverride = localStorage.getItem("urlOverride");

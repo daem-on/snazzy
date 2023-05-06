@@ -2,8 +2,8 @@
 
 import type { Room } from "colyseus.js";
 import { computed, onBeforeUnmount, provide, reactive, ref, shallowRef, watch, type Ref } from "vue";
-import { fetchDeck, type DeckDefinition } from "../../../server/fetchDeck.ts";
-import { Msg, Response } from "../../../server/shared-enums.ts";
+import { fetchDeck, type DeckDefinition } from "../../../server/fetchDeck";
+import { Msg, Response } from "../../../server/shared-enums";
 import { PlayerStatus, type State } from "../../../server/shared-schema";
 import Button from "./Button.vue";
 import HandView from "./HandView.vue";
