@@ -1,16 +1,22 @@
 import { Client } from "colyseus.js";
 import type { State } from "../../server/shared-schema.ts";
 
-const url = new URL(window.location.href);
-url.port = "2567";
-url.search = "";
-url.protocol = url.protocol.replace("http", "ws");
-url.hash = "";
+function getServerUrl() {
+	const localOverride = localStorage.getItem("urlOverride");
+	if (localOverride) return localOverride;
 
-const local = localStorage.getItem("urlOverride");
-if (local) url.href = local;
+	const buildOverride = import.meta.env.SERVER_URL;
+	if (buildOverride) return buildOverride;
 
-const client = new Client(url.href);
+	const url = new URL(window.location.href);
+	url.port = "2567";
+	url.search = "";
+	url.protocol = url.protocol.replace("http", "ws");
+	url.hash = "";
+	return url.href;
+}
+
+const client = new Client(getServerUrl());
 
 export async function join(title: string) {
 	return client.join<State>("card_room", { title: title });
