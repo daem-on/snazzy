@@ -279,6 +279,11 @@
   resolved "https://registry.yarnpkg.com/@colyseus/schema/-/schema-1.0.45.tgz#055233a75064fd558f90ae5cf1510812f1052ac2"
   integrity sha512-oW8126BOZMtf0ryuoarbeSnhmthEtrwsFwLVtVmam8IhrimEi9VGPs5GNMVo+rHcnUH1x+5j9MDZNaCq5h1OdA==
 
+"@colyseus/schema@^2.0.7":
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/@colyseus/schema/-/schema-2.0.7.tgz#52ec44ce83ed2a4b16e37709c7035fea085114e7"
+  integrity sha512-oYc53d2h1Fb6MV3NQ2njsFzUsVr1eLiqrK0E3uSFBnk/VQ5G8IjSNnufN8wHhdFeFQn5q8NNRSGFMtrywqo73g==
+
 "@esbuild/android-arm64@0.17.18":
   version "0.17.18"
   resolved "https://registry.yarnpkg.com/@esbuild/android-arm64/-/android-arm64-0.17.18.tgz#4aa8d8afcffb4458736ca9b32baa97d7cb5861ea"
