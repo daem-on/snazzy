@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
-import Card from './Card.vue';
+import { PlayerStatus } from '../../../server/shared-enums';
 import Button from './Button.vue';
-import { PlayerStatus } from '../../../server/shared-schema';
+import Card from './Card.vue';
 
 const props = defineProps<{
 	hand: Set<number>,

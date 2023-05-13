@@ -1,13 +1,10 @@
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
+import type { PlayerStatus } from "./shared-enums";
 
 export class ResponseCard extends Schema {
 	@type(["uint16"]) cardid = new ArraySchema<number>();
 	@type("string") playedBy!: string;
 	@type("boolean") winner = false;
-}
-
-export enum PlayerStatus {
-	Playing, Played, Czar, Timeout
 }
 
 export class PlayerState extends Schema {

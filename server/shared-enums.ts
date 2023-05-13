@@ -8,6 +8,10 @@ export enum Msg {
 	Chat
 }
 
+export enum PlayerStatus {
+	Playing, Played, Czar, Timeout
+}
+
 export enum Response {
 	name,
 	pickCard,

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from "vue";
-import { PlayerStatus, type State } from "../../../server/shared-schema";
+import { PlayerStatus } from "../../../server/shared-enums";
+import type { State } from "../../../server/shared-schema";
 import Card from "./Card.vue";
 
 const props = defineProps<{

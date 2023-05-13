@@ -3,8 +3,8 @@ import { ArraySchema } from "@colyseus/schema";
 import { Client, Room } from "colyseus";
 import fetch from "node-fetch";
 import { DeckDefinition, deckSchema, fetchDeck } from "./fetchDeck.ts";
-import { Msg, Response } from "./shared-enums.ts";
-import { PlayerState, PlayerStatus, ResponseCard, State } from "./shared-schema.ts";
+import { Msg, Response, PlayerStatus } from "./shared-enums.ts";
+import { PlayerState, ResponseCard, State } from "./shared-schema.ts";
 
 class Deck {
 	calls: number;

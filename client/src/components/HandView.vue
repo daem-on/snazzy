@@ -2,7 +2,7 @@
 
 import type { DroppableDroppedEvent, DroppableStartEvent, DroppableStopEvent } from "@shopify/draggable";
 import { reactive, watch } from "vue";
-import { PlayerStatus } from "../../../server/shared-schema";
+import { PlayerStatus } from "../../../server/shared-enums";
 import Button from "./Button.vue";
 import CardContainer from "./CardContainer.vue";
 
