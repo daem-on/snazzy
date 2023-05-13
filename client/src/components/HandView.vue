@@ -1,10 +1,10 @@
 <script setup lang="ts">
 
-import type { DroppableDroppedEvent, DroppableReturnedEvent, DroppableStartEvent, DroppableStopEvent } from "@shopify/draggable";
-import { reactive, ref, watch } from "vue";
-import CardContainer from "./CardContainer.vue";
-import Button from "./Button.vue";
+import type { DroppableDroppedEvent, DroppableStartEvent, DroppableStopEvent } from "@shopify/draggable";
+import { reactive, watch } from "vue";
 import { PlayerStatus } from "../../../server/shared-schema";
+import Button from "./Button.vue";
+import CardContainer from "./CardContainer.vue";
 
 const props = defineProps<{
 	hand: Set<number>,
@@ -37,7 +37,7 @@ function start(e: DroppableStartEvent) {
 	dragging = e;
 }
 function dropped(e: DroppableDroppedEvent) { currentTarget = e; }
-function returned(e: DroppableReturnedEvent) { currentTarget = undefined; }
+function returned() { currentTarget = undefined; }
 function stop(e: DroppableStopEvent) {
 	try {
 		if (currentTarget == undefined) {
@@ -98,7 +98,7 @@ watch(props.hand, newHand => {
 	}
 });
 
-watch(() => props.cardsInRound, (newValue, oldValue) => {
+watch(() => props.cardsInRound, (newValue) => {
 	returnToHand();
 	picked.length = newValue;
 	for (let i = 0; i < picked.length; i++) picked[i] = undefined;

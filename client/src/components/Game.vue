@@ -41,7 +41,7 @@ const started = computed(() => {
 
 watch(
 	() => { updateKey.value; return stateHolder.value?.deckUrl; },
-	async (newUrl, oldUrl) => {
+	async (newUrl) => {
 		if (newUrl == undefined) return;
 		deckDefinition.value = await fetchDeck(newUrl, fetch);
 	}

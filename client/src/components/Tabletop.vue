@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, type Ref, computed, reactive } from "vue";
+import { reactive, ref, watch } from "vue";
 import { PlayerStatus, type State } from "../../../server/shared-schema";
 import Card from "./Card.vue";
 

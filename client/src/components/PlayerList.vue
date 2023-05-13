@@ -24,7 +24,7 @@ const statusIcons: Record<PlayerStatus, string> = {
 
 <template>
 	<ul :key="updateKey">
-		<li v-for="[id, player] in displayed" :title="id">
+		<li v-for="[id, player] in displayed" :title="id" :key="id">
 			<span>{{ player.name }}</span>
 			<span class="material-icons">
 				{{ statusIcons[player.status] }}
