@@ -8,8 +8,10 @@ import CreateForm from "./components/CreateForm.vue";
 import Game from "./components/Game.vue";
 import { checkRoomExists, create, join } from "./connect";
 
+enum ExistsState { Checking, ServerOffline, Exists, DoesNotExist }
+
 const room = shallowRef<Room<State> | null>(null);
-const exists = ref<boolean | undefined>(undefined);
+const exists = ref<ExistsState>(ExistsState.Checking);
 const username = ref("Username");
 const connecting = ref(false);
 
@@ -18,14 +20,19 @@ const roomId = window.location.hash.slice(1);
 
 async function init() {
 	if (hashExists) {
-		exists.value = await checkRoomExists(roomId);
+		try {
+			exists.value = await checkRoomExists(roomId) ? ExistsState.Exists : ExistsState.DoesNotExist;
+		} catch (e) {
+			if (e instanceof ProgressEvent) exists.value = ExistsState.ServerOffline;
+			else throw e;
+		}
 	} else {
-		exists.value = false;
+		exists.value = ExistsState.DoesNotExist;
 	}
 }
 
 async function joinIfExists() {
-	if (exists.value && !connecting.value) {
+	if (exists.value === ExistsState.Exists && !connecting.value) {
 		try {
 			connecting.value = true;
 			room.value = await join(roomId);
@@ -45,7 +52,7 @@ async function createRoom(options: CreateRoomOptions) {
 	try {
 		connecting.value = true;
 		room.value = await create(options);
-		exists.value = true;
+		exists.value = ExistsState.Exists;
 		window.location.hash = options.title;
 	} finally {
 		connecting.value = false;
@@ -58,8 +65,8 @@ init();
 </script>
 
 <template>
-	<template v-if="exists == undefined">Checking...</template>
-	<template v-else-if="!exists">
+	<template v-if="exists === ExistsState.Checking">Checking...</template>
+	<template v-else-if="exists === ExistsState.DoesNotExist">
 		<div class="page">
 			<h1 v-if="hashExists">{{ roomId }} does not exist</h1>
 			<h1 v-else>Create room</h1>
@@ -70,19 +77,26 @@ init();
 			<CreateForm @create="createRoom"></CreateForm>
 		</div>
 	</template>
-	<template v-else-if="room == null">
-		<div class="page">
-			<form @submit="joinSubmit">
-				<label>
-					Username
-					<input type="text" v-model="username" />
-				</label>
-				<Button icon="done" black @click="joinIfExists">Join</Button>
-			</form>
-		</div>
+	<template v-else-if="exists === ExistsState.Exists">
+		<template v-if="room == null">
+			<div class="page">
+				<form @submit="joinSubmit">
+					<label>
+						Username
+						<input type="text" v-model="username" />
+					</label>
+					<Button icon="done" black @click="joinIfExists">Join</Button>
+				</form>
+			</div>
+		</template>
+		<template v-else>
+			<Game :room="room" :username="username"></Game>
+		</template>
 	</template>
-	<template v-else>
-		<Game :room="room" :username="username"></Game>
+	<template v-else-if="exists === ExistsState.ServerOffline">
+		<div class="page">
+			<h1>Server offline</h1>
+		</div>
 	</template>
 </template>
 
