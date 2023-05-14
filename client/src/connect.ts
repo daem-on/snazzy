@@ -5,7 +5,7 @@ function getServerUrl() {
 	const localOverride = localStorage.getItem("urlOverride");
 	if (localOverride) return localOverride;
 
-	const buildOverride = import.meta.env.SERVER_URL;
+	const buildOverride = import.meta.env.VITE_SERVER_URL;
 	if (buildOverride) return buildOverride;
 
 	const url = new URL(window.location.href);
